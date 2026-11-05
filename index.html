@@ -152,7 +152,7 @@ function renderSlides(){
 <div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,""):"Klik untuk unggah gambar"}</span></div>
 <input type="file" accept="image/*" hidden data-a="file">
 <div class="mini"><div><label>Latar gambar</label><select data-k="bg"><option value="fade">Fade tepi</option><option value="cut">Hapus latar</option><option value="card">Kartu bulat</option><option value="orig">Asli</option></select></div><div><label>Warna gambar</label><select data-k="tone"><option value="orig">Asli</option><option value="duo">Duotone palet</option></select></div></div>
-<div class="mini"><div><label>Posisi gambar</label><select data-k="ip"><option value="bottom">Bawah</option><option value="top">Atas</option><option value="right">Kanan</option><option value="center">Tengah</option></select></div>
+<div class="mini"><div><label>Posisi gambar</label><select data-k="ip"><option value="bottom">Bawah</option><option value="top">Atas</option><option value="left">Kiri (teks di samping)</option><option value="right">Kanan (teks di samping)</option><option value="center">Tengah</option></select></div>
 <div><label>Ukuran gambar <b data-r="is">${s.is}%</b></label><input type="range" data-k="is" min="20" max="100" style="width:100%;accent-color:var(--neon)"></div></div>
 <details class="pd"><summary>Prompt AI slide ${i+1} (opsional)</summary><pre data-p></pre><button class="btn" data-a="cp">Salin prompt slide ${i+1}</button></details>`;
     d.querySelectorAll("[data-k]").forEach(el=>el.value=s[el.dataset.k]);
@@ -186,7 +186,7 @@ function buildOne(i){
   const bgN={fade:"fade its edges softly into the background",cut:"remove its background",card:"show it as a rounded card with a thin #713BFF outline",orig:"keep it as is"}[s.bg||"orig"];
   const refs=s.ill?`- Image 1 = TEMPLATE LAYOUT. Copy its header, footer, background, icons, and margins EXACTLY. Take no content from it.
 - Image 2 = ILLUSTRATION. Use only as the visual element inside the content area; do not copy its background.`:`- Image 1 = TEMPLATE LAYOUT. Copy its header, footer, background, icons, and margins EXACTLY. Take no content from it.`;
-  const ill=s.ill?`Illustration: use Image 2 at the ${{bottom:"bottom",top:"top",right:"right side",center:"center"}[s.ip]} of the content area, about ${s.is}% of content width. Keep its appearance, ${bgN}.${s.tone==="duo"?" Recolor it as a duotone using only #10091F, #713BFF, and #D946EF.":""}`:"Illustration: none. Clean typographic layout only.";
+  const ill=s.ill?`Illustration: use Image 2 at the ${{bottom:"bottom",top:"top",left:"left side",right:"right side",center:"center"}[s.ip]} of the content area, about ${s.is}% of content width. Keep its appearance, ${bgN}.${s.tone==="duo"?" Recolor it as a duotone using only #10091F, #713BFF, and #D946EF.":""}`:"Illustration: none. Clean typographic layout only.";
   return `Create ONE social media carousel slide (slide ${i+1} of ${N}), aspect ratio 4:5 (1080x1350 px), using the attached template as the EXACT fixed layout. Keep every fixed element identical in position, size, font, and color.
 
 REFERENCE IMAGES:
@@ -253,27 +253,39 @@ async function drawSlide(cv,idx){
   const s=S.slides[idx],t=S.tpls[S.sel];if(!s||!t)return;
   try{await Promise.all([document.fonts.load("800 40px Montserrat"),document.fonts.load("400 40px Montserrat"),document.fonts.load("700 24px Montserrat")])}catch(e){}
   const x=cv.getContext("2d");x.clearRect(0,0,1080,1350);x.drawImage(await loadImg(t.src),0,0,1080,1350);
-  const look=$("look").value,L=165,R=918,W=R-L,B=1170,GAP=36,N=S.slides.length,num=$("num").checked,Tt=num?214:170;
-  const pad=look==="soft"?36:0,TX=L+pad,TW=W-2*pad;
-  const ts=Math.round(+$("ts").value*mult(s.type)),bs=+$("bs").value,al=$("al").value,va=$("va").value,ws=words(s);
+  const look=$("look").value,L=165,R=918,W=R-L,B=1170,GAP=36,GAP2=44,N=S.slides.length,num=$("num").checked,Tt=num?214:170,areaH=B-Tt;
+  const pad=look==="soft"?36:0,ts0=Math.round(+$("ts").value*mult(s.type)),bs0=+$("bs").value,al=$("al").value,va=$("va").value,ws=words(s);
   const title=look==="editorial"?s.title.toUpperCase():s.title,tlh=look==="editorial"?1.05:1.12;
   x.textBaseline="top";x.textAlign="left";
-  const tf=`800 ${ts}px Montserrat, sans-serif`,bf=`400 ${bs}px Montserrat, sans-serif`,ls=look==="tech"?Math.round(ts*.03)+"px":"0px";
-  x.font=tf;if("letterSpacing" in x)x.letterSpacing=ls;const tl=title.trim()?wrapT(x,title,TW):[];const th=tl.length*ts*tlh;
-  x.font=bf;if("letterSpacing" in x)x.letterSpacing="0px";const bl=s.body.trim()?wrapT(x,s.body,TW):[];const bh=bl.length*bs*1.45;
-  const rule=look==="editorial"&&th?36:0,H=rule+th+(th&&bh?GAP:0)+bh;
-  let r0=Tt+pad,r1=B-pad,img=null,ix=L,iy=B,iw=0,ih=0;
-  if(s.ill){const raw=await loadImg(s.ill.src);img=procImg(raw,s.bg||"orig",s.tone||"orig",+$("tol").value);const ar=img.height/img.width;iw=W*s.is/100;ih=iw*ar;const mh=(B-Tt)*0.7;if(ih>mh){ih=mh;iw=ih/ar}
-    ix=s.ip==="right"?R-iw:(s.ip==="center"||al==="center")?L+(W-iw)/2:L;
-    if(s.ip==="top"){iy=Tt;r0=Tt+ih+GAP+pad}else{iy=B-ih;r1=B-ih-GAP-pad}}
-  let y=va==="flex-start"?r0:va==="center"?r0+(r1-r0-H)/2:r1-H;y=Math.max(y,r0);
+  const spc=px=>look==="tech"?Math.round(px*.03)+"px":"0px",LS=v=>{if("letterSpacing" in x)x.letterSpacing=v};
+  const layout=(tsz,bsz,width)=>{
+    x.font=`800 ${tsz}px Montserrat, sans-serif`;LS(spc(tsz));const tl=title.trim()?wrapT(x,title,width):[];const th=tl.length*tsz*tlh;
+    x.font=`400 ${bsz}px Montserrat, sans-serif`;LS("0px");const bl=s.body.trim()?wrapT(x,s.body,width):[];const bh=bl.length*bsz*1.45;
+    const rule=look==="editorial"&&th?36:0;return{tl,bl,th,bh,rule,tsz,bsz,H:rule+th+(th&&bh?GAP:0)+bh}};
+  let Ls=layout(ts0,bs0,W-2*pad),img=null,iw=0,ih=0,ar=1,side=false;
+  const tbh=()=>Ls.H?Ls.H+2*pad:0;
+  if(s.ill){img=procImg(await loadImg(s.ill.src),s.bg||"orig",s.tone||"orig",+$("tol").value);ar=img.height/img.width;iw=W*s.is/100;ih=iw*ar;
+    const fit=ih<=areaH-(tbh()?GAP:0)-tbh();
+    side=Ls.H>0&&(s.ip==="right"||s.ip==="left"||!fit);
+    if(side){iw=Math.min(iw,W*.55);ih=iw*ar;if(ih>areaH){ih=areaH;iw=ih/ar}
+      const cw=W-iw-GAP2;let f=1;
+      do{Ls=layout(Math.round(ts0*.62*f),Math.round(bs0*.82*f),cw-2*pad);f*=.92}while(tbh()>areaH&&f>.5)}
+    else if(ih>areaH-(tbh()?GAP+tbh():0)){ih=Math.max(80,areaH-(tbh()?GAP+tbh():0));iw=ih/ar}}
+  const yAt=h=>va==="flex-start"?Tt:va==="center"?Tt+(areaH-h)/2:B-h;
+  let colX=L,colW=W,ix=L,iy=0,ty=0;
+  if(side){const left=s.ip==="left";colW=W-iw-GAP2;colX=left?L+iw+GAP2:L;ix=left?L:R-iw;iy=yAt(ih);ty=yAt(tbh())+pad}
+  else{const gh=tbh()+(img&&tbh()?GAP:0)+(img?ih:0),gy=Math.max(Tt,yAt(gh));
+    if(img&&s.ip==="top"){iy=gy;ty=gy+ih+(tbh()?GAP:0)+pad}else{ty=gy+pad;iy=gy+tbh()+(tbh()?GAP:0)}
+    ix=(s.ip==="center"||al==="center")?L+(W-iw)/2:L}
+  const TX=colX+pad,TW=colW-2*pad;
   if(look==="tech"){x.strokeStyle="#713BFF";x.lineWidth=4;x.beginPath();x.moveTo(L,214);x.lineTo(L,170);x.lineTo(L+44,170);x.moveTo(R,B-44);x.lineTo(R,B);x.lineTo(R-44,B);x.stroke()}
-  if(look==="soft"&&H){x.fillStyle="rgba(113,59,255,.14)";x.strokeStyle="rgba(113,59,255,.55)";x.lineWidth=2;x.beginPath();x.roundRect(L,y-pad,W,H+pad*2,36);x.fill();x.stroke()}
-  if(num){x.font="700 26px Montserrat, sans-serif";x.textAlign="right";x.fillStyle="#713BFF";x.fillText((idx+1)+"/"+N,R,170);x.textAlign="left"}
+  if(look==="soft"&&Ls.H){x.fillStyle="rgba(113,59,255,.14)";x.strokeStyle="rgba(113,59,255,.55)";x.lineWidth=2;x.beginPath();x.roundRect(colX,ty-pad,colW,Ls.H+pad*2,36);x.fill();x.stroke()}
+  if(num){x.font="700 26px Montserrat, sans-serif";LS("0px");x.textAlign="right";x.fillStyle="#713BFF";x.fillText((idx+1)+"/"+N,R,170);x.textAlign="left"}
   if(img)x.drawImage(img,ix,iy,iw,ih);
-  if(rule){x.fillStyle="#D946EF";const rw=90,rx=al==="center"?TX+(TW-rw)/2:TX;x.fillRect(rx,y,rw,8);y+=rule}
-  if(th){x.font=tf;if("letterSpacing" in x)x.letterSpacing=ls;drawLines(x,tl,maskOf(title,ws),TX,y,TW,al,ts*tlh,ts);y+=th+GAP}
-  if(bh){x.font=bf;if("letterSpacing" in x)x.letterSpacing="0px";drawLines(x,bl,maskOf(s.body,ws),TX,y,TW,al,bs*1.45,bs)}
+  let y=ty;
+  if(Ls.rule){x.fillStyle="#D946EF";const rw=90,rx=al==="center"?TX+(TW-rw)/2:TX;x.fillRect(rx,y,rw,8);y+=Ls.rule}
+  if(Ls.th){x.font=`800 ${Ls.tsz}px Montserrat, sans-serif`;LS(spc(Ls.tsz));drawLines(x,Ls.tl,maskOf(title,ws),TX,y,TW,al,Ls.tsz*tlh,Ls.tsz);y+=Ls.th+GAP}
+  if(Ls.bh){x.font=`400 ${Ls.bsz}px Montserrat, sans-serif`;LS("0px");drawLines(x,Ls.bl,maskOf(s.body,ws),TX,y,TW,al,Ls.bsz*1.45,Ls.bsz)}
 }
 const T32=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 const crc32=u=>{let c=-1;for(let i=0;i<u.length;i++)c=T32[(c^u[i])&255]^(c>>>8);return(c^-1)>>>0};
