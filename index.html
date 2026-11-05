@@ -6,52 +6,74 @@
 <title>Carousel Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#10091F;--violet:#713BFF;--neon:#D946EF;--text:#E8E7FF;--panel:#1a1230;--line:#2c2050;--muted:#9a95c4;
+:root{--bg:#050D19;--violet:#00A8FF;--neon:#A5E8FF;--text:#F4FAFF;--panel:rgba(255,255,255,.06);--line:rgba(255,255,255,.13);--muted:rgba(244,250,255,.62);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Montserrat,system-ui,sans-serif;color-scheme:dark}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr) 380px}
+body{margin:0;min-height:100vh;color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;color-scheme:dark;
+background:radial-gradient(900px 600px at 10% -5%,rgba(0,168,255,.30),transparent 60%),radial-gradient(800px 600px at 96% 8%,rgba(165,232,255,.15),transparent 60%),radial-gradient(900px 700px at 50% 112%,rgba(0,168,255,.20),transparent 60%),var(--bg);background-attachment:fixed}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 18px 40px;display:grid;gap:22px;grid-template-columns:minmax(0,1fr) 390px}
 @media(max-width:900px){.wrap{grid-template-columns:1fr}}
-header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:14px}
-h1{margin:0;font-size:20px;font-weight:800;letter-spacing:.02em}
-h1 i{display:inline-block;width:4px;height:18px;background:var(--neon);margin-left:8px;vertical-align:-3px}
-.sub{color:var(--muted);font-size:12px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
-.card h2{margin:0 0 12px;font-size:13px;font-weight:700;color:var(--neon)}
-label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
-input[type=text],textarea,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:9px 10px;font:inherit}
+header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding:4px 6px 10px}
+h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em}
+h1 i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--neon);box-shadow:0 0 14px var(--neon);margin-left:10px;vertical-align:middle}
+.sub{color:var(--muted);font-size:13px}
+.card,.slide{position:relative;isolation:isolate;--mx:50%;--my:0%}
+.card{background:var(--panel);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:18px;box-shadow:0 10px 36px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.14);transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .3s}
+.card:hover{transform:translateY(-3px);border-color:rgba(165,232,255,.38);box-shadow:0 16px 48px rgba(0,168,255,.20),inset 0 1px 0 rgba(255,255,255,.2)}
+.card::before,.slide::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(320px circle at var(--mx) var(--my),rgba(165,232,255,.14),transparent 70%)}
+.card:hover::before,.slide:hover::before{opacity:1}
+.card h2{margin:0 0 12px;font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--neon)}
+label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
+input[type=text],textarea,select{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px 12px;font:inherit;transition:border-color .2s,background .2s,box-shadow .2s}
+input[type=text]:hover,textarea:hover,select:hover{background:rgba(255,255,255,.1)}
+select option{background:#0b1a2e;color:var(--text)}
 textarea{min-height:84px;resize:vertical}
-input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--violet);outline-offset:1px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 3px rgba(0,168,255,.28)}
+button:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn,.seg button{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text);border-radius:980px;padding:9px 16px;font:inherit;font-weight:500;cursor:pointer;transition:transform .2s,background .2s,border-color .2s,box-shadow .2s}
+.btn:hover,.seg button:hover{background:rgba(255,255,255,.15);border-color:rgba(165,232,255,.45);transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
 .seg{display:flex;gap:6px;flex-wrap:wrap}
-.seg button,.btn{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 12px;font:inherit;font-weight:500;cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--violet);border-color:var(--violet)}
-.btn.main{background:var(--neon);border-color:var(--neon);color:var(--bg);font-weight:800;width:100%;padding:13px;font-size:15px}
-.btn:hover{border-color:var(--violet)}
-.tpls{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
-.tpl{flex:0 0 84px;border:2px solid var(--line);border-radius:6px;background:var(--bg);padding:0;cursor:pointer;position:relative}
-.tpl img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:4px}
-.tpl[aria-pressed=true]{border-color:var(--neon)}
-.tpl.add{display:grid;place-items:center;color:var(--muted);aspect-ratio:4/5;font-size:24px}
-.range{display:flex;align-items:center;gap:10px}.range input{flex:1;accent-color:var(--neon)}.range b{min-width:52px;text-align:right;font-weight:700}
-.drop{border:1px dashed var(--violet);border-radius:8px;padding:14px;text-align:center;color:var(--muted);cursor:pointer}
-.drop img{max-height:90px;max-width:100%;border-radius:4px;display:block;margin:0 auto 6px}
+.seg button[aria-pressed=true]{background:var(--violet);border-color:var(--violet);color:#fff}
+.btn.main{background:linear-gradient(135deg,var(--violet),var(--neon));border:none;color:var(--bg);font-weight:700;width:100%;padding:14px;font-size:15px;box-shadow:0 8px 24px rgba(0,168,255,.35)}
+.btn.main:hover{box-shadow:0 12px 32px rgba(0,168,255,.5);transform:translateY(-2px)}
+.tpls{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 8px}
+.tpl{flex:0 0 88px;border:2px solid var(--line);border-radius:14px;background:rgba(255,255,255,.05);padding:0;cursor:pointer;transition:transform .25s,border-color .25s,box-shadow .25s}
+.tpl:hover{transform:translateY(-3px) scale(1.04);border-color:rgba(165,232,255,.5)}
+.tpl img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:11px}
+.tpl[aria-pressed=true]{border-color:var(--neon);box-shadow:0 0 0 3px rgba(165,232,255,.2),0 8px 22px rgba(0,168,255,.3)}
+.tpl.add{display:grid;place-items:center;color:var(--muted);aspect-ratio:4/5;font-size:26px}
+.range{display:flex;align-items:center;gap:10px}.range input{flex:1;accent-color:var(--neon)}.range b{min-width:52px;text-align:right;font-weight:600}
+.drop{border:1px dashed rgba(165,232,255,.5);border-radius:14px;padding:12px;text-align:center;color:var(--muted);cursor:pointer;font-size:12px;transition:background .2s,border-color .2s}
+.drop:hover{background:rgba(165,232,255,.08);border-color:var(--neon)}
+.drop img{max-height:90px;max-width:100%;border-radius:8px;display:block;margin:0 auto 6px}
 .stick{position:sticky;top:12px;align-self:start}
-#pv{position:relative;width:100%;aspect-ratio:4/5;background:var(--bg) center/cover;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-#pc{position:absolute;left:15.3%;right:15%;top:12.6%;bottom:13.3%;display:flex;flex-direction:column;gap:3%;overflow:hidden}
-#pt{font-weight:800;line-height:1.12;white-space:pre-wrap}#pb{line-height:1.45;white-space:pre-wrap}
-#pi{border:1px dashed var(--violet);border-radius:4px;max-width:100%;object-fit:contain}
+.slide{border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px;background:rgba(255,255,255,.04);transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .3s}
+.slide:hover{transform:translateY(-2px);border-color:rgba(165,232,255,.35);box-shadow:0 10px 30px rgba(0,168,255,.14)}
+.slide.on{border-color:var(--neon);box-shadow:0 0 0 1px rgba(165,232,255,.35),0 10px 30px rgba(0,168,255,.18)}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}.sh b{font-weight:600}.sh .btn{padding:4px 11px;font-size:12px;margin-left:4px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pills button{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text);border-radius:980px;min-width:34px;padding:5px 12px;font:inherit;font-size:12px;cursor:pointer;transition:background .2s,transform .2s}
+.pills button:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}
+.pills button[aria-pressed=true]{background:var(--neon);border-color:var(--neon);color:var(--bg);font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chips button{background:rgba(0,168,255,.14);border:1px solid rgba(0,168,255,.5);color:var(--text);border-radius:980px;padding:5px 12px;font:inherit;font-size:12px;cursor:pointer;transition:background .2s,transform .2s}
+.chips button:hover{background:rgba(0,168,255,.3);transform:translateY(-1px)}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#cv{box-shadow:0 12px 40px rgba(0,0,0,.45);transition:transform .3s}
+#cv:hover{transform:scale(1.015)}
 mark{background:none;color:var(--neon)}
-pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,Menlo,monospace;max-height:280px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px}
-.q{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
-.q span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.q .btn{padding:5px 9px;font-size:12px}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--violet);padding:9px 16px;border-radius:6px;opacity:0;transition:opacity .2s;pointer-events:none}
+pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,Menlo,monospace;max-height:280px;overflow:auto;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:12px;padding:10px}
+.pd{margin-top:12px}.pd summary{cursor:pointer;color:var(--neon);font-weight:600;font-size:12px}.pd pre{margin:8px 0;max-height:220px}.pd{min-width:0;max-width:100%}.pd .btn{display:block;width:100%;max-width:100%;min-width:0;padding:9px 12px;white-space:normal;overflow-wrap:anywhere;text-align:center}.slide{min-width:0;max-width:100%}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(0,168,255,.85);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);color:#fff;padding:10px 18px;border-radius:980px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 28px rgba(0,168,255,.4)}
 .toast.on{opacity:1}
-.slide{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:12px;background:var(--bg)}.slide.on{border-color:var(--neon)}.sh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}.sh b{font-weight:800}.sh .btn{padding:4px 9px;font-size:12px;margin-left:4px}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.pills button{background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:99px;padding:5px 12px;font:inherit;font-size:12px;cursor:pointer}.pills button[aria-pressed=true]{background:var(--neon);border-color:var(--neon);color:var(--bg);font-weight:700}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chips button{background:var(--bg);border:1px solid var(--violet);color:var(--text);border-radius:99px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}.drop{padding:10px;font-size:12px}.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
-.pd{margin-top:10px}.pd summary{cursor:pointer;color:var(--neon);font-weight:700;font-size:12px}.pd pre{margin:8px 0;max-height:220px}.pd .btn{width:100%}
-footer{text-align:center;padding:0 16px calc(36px + env(safe-area-inset-bottom,0px));font-size:12px;font-weight:400;letter-spacing:.04em;color:var(--muted)}footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line)}footer a:hover{border-bottom-color:var(--neon)}footer span{margin:0 8px;opacity:.5}
+.hint{font-size:12px;color:var(--muted);margin:10px 0 0}
+footer{text-align:center;padding:0 16px calc(36px + env(safe-area-inset-bottom,0px));font-size:12px;font-weight:300;letter-spacing:.05em;color:var(--muted)}
+footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line);transition:border-color .2s,color .2s}footer a:hover{color:var(--neon);border-bottom-color:var(--neon)}footer span{margin:0 8px;opacity:.5}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
@@ -105,19 +127,18 @@ const $=id=>document.getElementById(id);
 const S={tpls:[],sel:0,cur:0,slides:[]};
 const newSlide=(t)=>({type:t||"isi",title:"",body:"",hl:"",ill:null,ip:"bottom",is:60,bg:"fade",tone:"orig"});
 S.slides=[newSlide("cover"),newSlide("isi")];
-S.slides[0].title="3 kesalahan desain pemula";S.slides[0].body="Geser untuk lihat";S.slides[1].title="Terlalu banyak font";S.slides[1].body="Pakai maksimal dua font dalam satu layout.";
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast("Penyimpanan penuh, template tidak tersimpan")}}};
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1800)}
 function defaultTpl(){
   const c=document.createElement("canvas");c.width=1080;c.height=1350;const x=c.getContext("2d");
-  x.fillStyle="#10091F";x.fillRect(0,0,1080,1350);
-  x.fillStyle="#E8E7FF";x.font="700 22px Montserrat, sans-serif";x.textBaseline="middle";
+  x.fillStyle="#050D19";x.fillRect(0,0,1080,1350);
+  x.fillStyle="#F4FAFF";x.font="700 22px Montserrat, sans-serif";x.textBaseline="middle";
   x.fillText("SANDIANA.ART",170,92);
   x.textAlign="right";x.fillText("UMAR",912,92);x.fillText("SANDI",912,112);
-  x.fillStyle="#D946EF";x.fillRect(915,84,3,36);
-  x.textAlign="left";x.fillStyle="#E8E7FF";x.font="700 24px Montserrat, sans-serif";x.fillText("save & share",241,1226);
+  x.fillStyle="#A5E8FF";x.fillRect(915,84,3,36);
+  x.textAlign="left";x.fillStyle="#F4FAFF";x.font="700 24px Montserrat, sans-serif";x.fillText("save & share",241,1226);
   x.font="400 24px Montserrat, sans-serif";x.fillText("buat reminder kamu",241,1247);
-  x.fillStyle="#D946EF";
+  x.fillStyle="#A5E8FF";
   x.beginPath();x.moveTo(165,1221);x.lineTo(193,1221);x.lineTo(193,1255);x.lineTo(179,1245);x.lineTo(165,1255);x.closePath();x.fill();
   x.beginPath();x.moveTo(196,1236);x.lineTo(232,1221);x.lineTo(218,1257);x.lineTo(213,1244);x.closePath();x.fill();
   for(let i=0;i<5;i++)x.fillRect(836+i*17.2,1243,13,13);
@@ -145,8 +166,8 @@ function renderSlides(){
   S.slides.forEach((s,i)=>{const d=document.createElement("div");d.className="slide"+(i===S.cur?" on":"");d.dataset.i=i;
     d.innerHTML=`<div class="sh"><b>Slide ${i+1}</b><span><button class="btn" data-a="dup">Duplikat</button><button class="btn" data-a="del" ${S.slides.length<2?"disabled":""}>Hapus</button></span></div>
 <label>Tipe</label><select data-k="type"><option value="cover">Cover</option><option value="isi">Isi</option><option value="cta">Penutup</option></select>
-<label>Judul</label><textarea data-k="title" style="min-height:56px"></textarea>
-<label>Isi</label><textarea data-k="body" style="min-height:56px"></textarea>
+<label>Judul</label><textarea data-k="title" style="min-height:56px" placeholder="Tulis judul..."></textarea>
+<label>Isi</label><textarea data-k="body" style="min-height:56px" placeholder="Tulis isi konten..."></textarea>
 <label>Kata sorot (koma)</label><input type="text" data-k="hl">
 <label>Gambar referensi (opsional)</label>
 <div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,""):"Klik untuk unggah gambar"}</span></div>
@@ -183,10 +204,10 @@ function buildOne(i){
   const s=S.slides[i],N=S.slides.length,ts=Math.round(+$("ts").value*mult(s.type)),bs=+$("bs").value;
   const al=$("al").value==="left"?"left-aligned":"center-aligned",va={"flex-start":"at the top","center":"centered","flex-end":"at the bottom"}[$("va").value],w=words(s);
   const note={cover:"COVER slide: very large hook headline, minimal body.",isi:"CONTENT slide: headline plus short body.",cta:"CLOSING slide: clear call to action."}[s.type];
-  const bgN={fade:"fade its edges softly into the background",cut:"remove its background",card:"show it as a rounded card with a thin #713BFF outline",orig:"keep it as is"}[s.bg||"orig"];
+  const bgN={fade:"fade its edges softly into the background",cut:"remove its background",card:"show it as a rounded card with a thin #00A8FF outline",orig:"keep it as is"}[s.bg||"orig"];
   const refs=s.ill?`- Image 1 = TEMPLATE LAYOUT. Copy its header, footer, background, icons, and margins EXACTLY. Take no content from it.
 - Image 2 = ILLUSTRATION. Use only as the visual element inside the content area; do not copy its background.`:`- Image 1 = TEMPLATE LAYOUT. Copy its header, footer, background, icons, and margins EXACTLY. Take no content from it.`;
-  const ill=s.ill?`Illustration: use Image 2 at the ${{bottom:"bottom",top:"top",left:"left side",right:"right side",center:"center"}[s.ip]} of the content area, about ${s.is}% of content width. Keep its appearance, ${bgN}.${s.tone==="duo"?" Recolor it as a duotone using only #10091F, #713BFF, and #D946EF.":""}`:"Illustration: none. Clean typographic layout only.";
+  const ill=s.ill?`Illustration: use Image 2 at the ${{bottom:"bottom",top:"top",left:"left side",right:"right side",center:"center"}[s.ip]} of the content area, about ${s.is}% of content width. Keep its appearance, ${bgN}.${s.tone==="duo"?" Recolor it as a duotone using only #050D19, #00A8FF, and #A5E8FF.":""}`:"Illustration: none. Clean typographic layout only.";
   return `Create ONE social media carousel slide (slide ${i+1} of ${N}), aspect ratio 4:5 (1080x1350 px), using the attached template as the EXACT fixed layout. Keep every fixed element identical in position, size, font, and color.
 
 REFERENCE IMAGES:
@@ -194,21 +215,21 @@ ${refs}
 
 ${note}
 
-COLOR PALETTE (use ONLY these): Background #10091F, Violet #713BFF, Neon Purple #D946EF, Text #E8E7FF.
+COLOR PALETTE (use ONLY these): Background #050D19, Cyan Blue #00A8FF, Ice Blue #A5E8FF, Text #F4FAFF.
 
 FIXED TEMPLATE ELEMENTS (do not change, move, or restyle):
-- Flat #10091F background, no gradient, texture, or glow.
-- Top left "SANDIANA.ART"; top right two-line "UMAR / SANDI" with thin #D946EF vertical line; bottom left bookmark + paper-plane icons in #D946EF with "save & share" and "buat reminder kamu"; bottom right row of 5 small #D946EF squares.
+- Flat #050D19 background, no gradient, texture, or glow.
+- Top left "SANDIANA.ART"; top right two-line "UMAR / SANDI" with thin #A5E8FF vertical line; bottom left bookmark + paper-plane icons in #A5E8FF with "save & share" and "buat reminder kamu"; bottom right row of 5 small #A5E8FF squares.
 - Safe margins about 165px left, 160px right.
 
 CONTENT AREA (only part that changes): y=170px to y=1170px, x=165px to x=918px.
 Headline (Bold ~${ts}px): "${s.title}"
 Body (Regular ~${bs}px): ${s.body?`"${s.body}"`:"none"}
-${w.length?"Highlight in #D946EF: "+w.map(x=>`"${x}"`).join(", "):"Highlight: none"}
-${ill}${$("num").checked?`\nSlide number: "${i+1}/${N}" small, #E8E7FF, inside the content area.`:""}
+${w.length?"Highlight in #A5E8FF: "+w.map(x=>`"${x}"`).join(", "):"Highlight: none"}
+${ill}${$("num").checked?`\nSlide number: "${i+1}/${N}" small, #F4FAFF, inside the content area.`:""}
 
 STYLE: ${$("style").value.trim()}
-TEXT RULES: Montserrat, ${al}, text ${va} of the content area, color #E8E7FF. Render all text exactly as written, spelled correctly, no extra words. Content must never overlap header or footer.${$("ex").value.trim()?"\nEXTRA NOTE: "+$("ex").value.trim():""}
+TEXT RULES: Montserrat, ${al}, text ${va} of the content area, color #F4FAFF. Render all text exactly as written, spelled correctly, no extra words. Content must never overlap header or footer.${$("ex").value.trim()?"\nEXTRA NOTE: "+$("ex").value.trim():""}
 
 NEGATIVE: no other colors, no watermark, no extra logos, no borders, no drop shadows, no gradient background, no photo-realistic background, no changes to header/footer, no misspelled text.`}
 function update(){
@@ -229,7 +250,7 @@ function wrapT(x,text,maxW){const lines=[];let off=0;const sp=x.measureText(" ")
 function maskOf(text,ws){const m=new Array(text.length).fill(false);ws.forEach(w=>{const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");let r;while((r=re.exec(text))){for(let i=r.index;i<r.index+r[0].length;i++)m[i]=true;if(!r[0].length)break}});return m}
 function drawLines(x,lines,m,x0,y,maxW,al,lh,px){const sp=x.measureText(" ").width;
   lines.forEach((ln,li)=>{let cx=al==="center"?x0+(maxW-ln.w)/2:x0;const ly=y+li*lh;
-    ln.words.forEach(w=>{let i=0;while(i<w.t.length){let j=i;const h=m[w.s+i];while(j<w.t.length&&m[w.s+j]===h)j++;const run=w.t.slice(i,j);x.fillStyle=h?"#D946EF":"#E8E7FF";x.fillText(run,cx,ly);cx+=x.measureText(run).width;i=j}cx+=sp})})}
+    ln.words.forEach(w=>{let i=0;while(i<w.t.length){let j=i;const h=m[w.s+i];while(j<w.t.length&&m[w.s+j]===h)j++;const run=w.t.slice(i,j);x.fillStyle=h?"#A5E8FF":"#F4FAFF";x.fillText(run,cx,ly);cx+=x.measureText(run).width;i=j}cx+=sp})})}
 const procCache={};
 function procImg(img,bg,tone,tol){
   const key=img.src.length+"|"+img.src.slice(-40)+bg+tone+tol;if(procCache[key])return procCache[key];
@@ -238,7 +259,7 @@ function procImg(img,bg,tone,tol){
   if(bg==="cut"||tone==="duo"){
     const d=x.getImageData(0,0,w,h),p=d.data;let cr=0,cg=0,cb=0;
     [[0,0],[w-1,0],[0,h-1],[w-1,h-1]].forEach(([px,py])=>{const i=(py*w+px)*4;cr+=p[i];cg+=p[i+1];cb+=p[i+2]});cr/=4;cg/=4;cb/=4;
-    const A=[16,9,31],M=[113,59,255],N=[217,70,239];
+    const A=[5,13,25],M=[0,168,255],N=[165,232,255];
     for(let i=0;i<p.length;i+=4){
       if(bg==="cut"){const dist=Math.hypot(p[i]-cr,p[i+1]-cg,p[i+2]-cb);if(dist<tol)p[i+3]=0;else if(dist<tol*1.5)p[i+3]*=(dist-tol)/(tol*.5)}
       if(tone==="duo"&&p[i+3]>0){let l=(.299*p[i]+.587*p[i+1]+.114*p[i+2])/255;l=Math.min(1,Math.max(0,(l-.08)/.84));
@@ -247,7 +268,7 @@ function procImg(img,bg,tone,tol){
   if(bg==="fade"){x.globalCompositeOperation="destination-in";
     [[w,0],[0,h]].forEach(([gx,gy])=>{const g=x.createLinearGradient(0,0,gx,gy);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(.16,"#000");g.addColorStop(.84,"#000");g.addColorStop(1,"rgba(0,0,0,0)");x.fillStyle=g;x.fillRect(0,0,w,h)});x.globalCompositeOperation="source-over"}
   if(bg==="card"){const r=Math.min(w,h)*.07,lw=Math.max(4,w/150);x.globalCompositeOperation="destination-in";x.beginPath();x.roundRect(0,0,w,h,r);x.fill();x.globalCompositeOperation="source-over";
-    x.strokeStyle="#713BFF";x.lineWidth=lw;x.beginPath();x.roundRect(lw/2,lw/2,w-lw,h-lw,r);x.stroke()}
+    x.strokeStyle="#00A8FF";x.lineWidth=lw;x.beginPath();x.roundRect(lw/2,lw/2,w-lw,h-lw,r);x.stroke()}
   return procCache[key]=c}
 async function drawSlide(cv,idx){
   const s=S.slides[idx],t=S.tpls[S.sel];if(!s||!t)return;
@@ -278,12 +299,12 @@ async function drawSlide(cv,idx){
     if(img&&s.ip==="top"){iy=gy;ty=gy+ih+(tbh()?GAP:0)+pad}else{ty=gy+pad;iy=gy+tbh()+(tbh()?GAP:0)}
     ix=(s.ip==="center"||al==="center")?L+(W-iw)/2:L}
   const TX=colX+pad,TW=colW-2*pad;
-  if(look==="tech"){x.strokeStyle="#713BFF";x.lineWidth=4;x.beginPath();x.moveTo(L,214);x.lineTo(L,170);x.lineTo(L+44,170);x.moveTo(R,B-44);x.lineTo(R,B);x.lineTo(R-44,B);x.stroke()}
-  if(look==="soft"&&Ls.H){x.fillStyle="rgba(113,59,255,.14)";x.strokeStyle="rgba(113,59,255,.55)";x.lineWidth=2;x.beginPath();x.roundRect(colX,ty-pad,colW,Ls.H+pad*2,36);x.fill();x.stroke()}
-  if(num){x.font="700 26px Montserrat, sans-serif";LS("0px");x.textAlign="right";x.fillStyle="#713BFF";x.fillText((idx+1)+"/"+N,R,170);x.textAlign="left"}
+  if(look==="tech"){x.strokeStyle="#00A8FF";x.lineWidth=4;x.beginPath();x.moveTo(L,214);x.lineTo(L,170);x.lineTo(L+44,170);x.moveTo(R,B-44);x.lineTo(R,B);x.lineTo(R-44,B);x.stroke()}
+  if(look==="soft"&&Ls.H){x.fillStyle="rgba(0,168,255,.14)";x.strokeStyle="rgba(0,168,255,.55)";x.lineWidth=2;x.beginPath();x.roundRect(colX,ty-pad,colW,Ls.H+pad*2,36);x.fill();x.stroke()}
+  if(num){x.font="700 26px Montserrat, sans-serif";LS("0px");x.textAlign="right";x.fillStyle="#00A8FF";x.fillText((idx+1)+"/"+N,R,170);x.textAlign="left"}
   if(img)x.drawImage(img,ix,iy,iw,ih);
   let y=ty;
-  if(Ls.rule){x.fillStyle="#D946EF";const rw=90,rx=al==="center"?TX+(TW-rw)/2:TX;x.fillRect(rx,y,rw,8);y+=Ls.rule}
+  if(Ls.rule){x.fillStyle="#A5E8FF";const rw=90,rx=al==="center"?TX+(TW-rw)/2:TX;x.fillRect(rx,y,rw,8);y+=Ls.rule}
   if(Ls.th){x.font=`800 ${Ls.tsz}px Montserrat, sans-serif`;LS(spc(Ls.tsz));drawLines(x,Ls.tl,maskOf(title,ws),TX,y,TW,al,Ls.tsz*tlh,Ls.tsz);y+=Ls.th+GAP}
   if(Ls.bh){x.font=`400 ${Ls.bsz}px Montserrat, sans-serif`;LS("0px");drawLines(x,Ls.bl,maskOf(s.body,ws),TX,y,TW,al,Ls.bsz*1.45,Ls.bsz)}
 }
@@ -314,6 +335,7 @@ $("dlT").onclick=()=>saveFile("image1-template.png",new Blob([dataBytes(S.tpls[S
 $("dlI").onclick=()=>{const fs=[];let n=1;S.slides.forEach((x,i)=>{if(!x.ill)return;n++;fs.push({name:"image"+n+"-slide"+(i+1)+".png",data:dataBytes(x.ill.src)})});
   fs.length?saveFile("referensi.zip",makeZip(fs)):toast("Belum ada gambar referensi")};
 $("flow").onclick=()=>window.open("https://labs.google/fx/tools/flow","_blank","noopener");
+document.addEventListener("pointermove",e=>{const c=e.target.closest&&e.target.closest(".card,.slide");if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty("--mx",(e.clientX-r.left)+"px");c.style.setProperty("--my",(e.clientY-r.top)+"px")});
 init();
 </script>
 </body>
