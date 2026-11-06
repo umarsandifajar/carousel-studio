@@ -25,7 +25,7 @@ h1 i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(
 .card:hover::before,.slide:hover::before{opacity:1}
 .card h2{margin:0 0 12px;font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--neon)}
 label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
-input[type=text],textarea,select{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px 12px;font:inherit;transition:border-color .2s,background .2s,box-shadow .2s}
+input[type=text],input[type=number],textarea,select{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px 12px;font:inherit;transition:border-color .2s,background .2s,box-shadow .2s}
 input[type=text]:hover,textarea:hover,select:hover{background:rgba(255,255,255,.1)}
 select option{background:#0b1a2e;color:var(--text)}
 textarea{min-height:84px;resize:vertical}
@@ -87,6 +87,8 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 .sb>div{overflow:hidden;min-height:0;visibility:hidden;padding:3px;margin:-3px;transition:visibility 0s .35s}
 .slide.on .sb{grid-template-rows:1fr}.slide.on .sb>div{visibility:visible;transition-delay:0s}
 .slide:not(.on) .sh{cursor:pointer;margin-bottom:0}
+.imp{margin-bottom:14px}.imp summary{cursor:pointer;color:var(--neon);font-weight:600;font-size:13px;margin-bottom:8px}
+.cn{font-size:11px;color:var(--muted);margin-left:6px}.cn.max{color:var(--neon);font-weight:600}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -116,10 +118,24 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <label>Ukuran font judul</label><div class="range"><input type="range" id="ts" min="48" max="140" value="84"><b id="tsv"></b></div>
 <label>Ukuran font isi</label><div class="range"><input type="range" id="bs" min="24" max="64" value="38"><b id="bsv"></b></div>
 <label>Catatan tambahan (opsional)</label><input type="text" id="ex" placeholder="Contoh: tambahkan nomor slide kecil">
+<label>Batas panjang isi konten (per slide)</label>
+<div class="row"><select id="lu"><option value="kata">Jumlah kata</option><option value="karakter">Jumlah karakter</option></select><input type="number" id="lm" value="30" min="5" max="600"></div>
+<p class="hint">Berlaku saat mengetik dan saat impor, dan otomatis masuk ke prompt Claude. Judul tidak dibatasi di sini.</p>
 <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="num" checked> Tambah nomor slide otomatis (1/N)</label>
 </section>
 
-<section class="card"><h2>3. Slide</h2><div id="slides"></div>
+<section class="card"><h2>3. Slide</h2><details class="imp"><summary>Impor dari teks (hasil rangkuman Claude)</summary>
+<p class="hint" style="margin-top:0"><b>Langkah 1.</b> Isi link, salin prompt, lalu tempel di chat Claude.</p>
+<label for="lk">Link website</label><input type="text" id="lk" placeholder="https://contoh.com/artikel">
+<label for="jn">Jumlah slide (termasuk cover dan CTA)</label><input type="number" id="jn" value="5" min="3" max="12">
+<label>Prompt untuk Claude (otomatis)</label><pre id="cp"></pre>
+<button class="btn main" id="cpb" style="margin-top:10px;padding:11px">Salin prompt untuk Claude</button>
+<p class="hint"><b>Langkah 2.</b> Tempel balasan Claude di bawah ini.</p>
+<textarea id="imp" placeholder="SLIDE 1 | cover&#10;Judul: ...&#10;Isi: ...&#10;Sorot: kata1, kata2&#10;&#10;SLIDE 2 | isi&#10;Judul: ...&#10;Isi: ...&#10;&#10;SLIDE 5 | cta&#10;Judul: ...&#10;Isi: ..." style="min-height:150px"></textarea>
+<label for="impm">Cara impor</label><select id="impm"><option value="replace">Ganti semua slide</option><option value="append">Tambah di belakang slide yang ada</option></select>
+<button class="btn main" id="impb" style="margin-top:12px;padding:11px">Impor slide</button>
+<p class="hint">Tipe slide: cover, isi, atau cta. Baris Gambar diabaikan, gambar tetap diunggah di kartu slide.</p></details>
+<div id="slides"></div>
 <button class="btn" id="add" style="width:100%">+ Tambah slide</button></section>
 </main>
 
@@ -184,7 +200,7 @@ function renderSlides(){
 <div class="sb"><div>
 <label>Tipe</label><select data-k="type"><option value="cover">Cover</option><option value="isi">Isi</option><option value="cta">Penutup</option></select>
 <label>Judul</label><textarea data-k="title" style="min-height:56px" placeholder="Tulis judul..."></textarea>
-<label>Isi</label><textarea data-k="body" style="min-height:56px" placeholder="Tulis isi konten..."></textarea>
+<label>Isi <span class="cn"></span></label><textarea data-k="body" style="min-height:56px" placeholder="Tulis isi konten..."></textarea>
 <label>Kata sorot (koma)</label><input type="text" data-k="hl">
 <label>Gambar referensi (opsional)</label>
 <div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,""):"Klik untuk unggah gambar"}</span></div>
@@ -193,12 +209,12 @@ function renderSlides(){
 <div class="mini"><div><label>Posisi gambar</label><select data-k="ip"><option value="bottom">Bawah</option><option value="top">Atas</option><option value="left">Kiri (teks di samping)</option><option value="right">Kanan (teks di samping)</option><option value="center">Tengah</option></select></div>
 <div><label>Ukuran gambar <b data-r="is">${s.is}%</b></label><input type="range" data-k="is" min="20" max="100" style="width:100%;accent-color:var(--neon)"></div></div>
 <details class="pd"><summary>Prompt AI slide ${i+1} (opsional)</summary><pre data-p></pre><button class="btn" data-a="cp">Salin prompt slide ${i+1}</button></details></div></div>`;
-    d.querySelectorAll("[data-k]").forEach(el=>el.value=s[el.dataset.k]);
+    d.querySelectorAll("[data-k]").forEach(el=>el.value=s[el.dataset.k]);updCount(d,s);
     box.appendChild(d)});
 }
 const slidesEl=$("slides");
 slidesEl.addEventListener("input",e=>{const c=e.target.closest(".slide");if(!c||!e.target.dataset.k)return;const i=+c.dataset.i,k=e.target.dataset.k;
-  S.slides[i][k]=k==="is"?+e.target.value:e.target.value;if(k==="title")c.querySelector(".sn").textContent=e.target.value.slice(0,30)||"kosong";if(k==="is")c.querySelector("[data-r=is]").textContent=e.target.value+"%";
+  if(k==="body"){const cl=clip(e.target.value);if(cl!==e.target.value)e.target.value=cl}S.slides[i][k]=k==="is"?+e.target.value:e.target.value;if(k==="body")updCount(c,S.slides[i]);if(k==="title")c.querySelector(".sn").textContent=e.target.value.slice(0,30)||"kosong";if(k==="is")c.querySelector("[data-r=is]").textContent=e.target.value+"%";
   S.cur=i;markCur();update()});
 slidesEl.addEventListener("focusin",e=>{const c=e.target.closest(".slide");if(c&&+c.dataset.i!==S.cur){S.cur=+c.dataset.i;markCur();update()}});
 slidesEl.addEventListener("click",e=>{const c=e.target.closest(".slide");if(!c)return;const i=+c.dataset.i,a=e.target.closest("[data-a]");if(!a){if(e.target.closest(".sh")&&i!==S.cur)selectSlide(i);return}
@@ -261,7 +277,7 @@ function selectSlide(i){S.cur=i;markCur();renderThumbs();
 function update(all){
   const t=S.tpls[S.sel];if(!t)return;
   $("tsv").textContent=$("ts").value+" px";$("bsv").textContent=$("bs").value+" px";$("tolv").textContent=$("tol").value;$("cnt").textContent=S.slides.length+" slide";
-  document.querySelectorAll("[data-p]").forEach(p=>{p.textContent=buildOne(+p.closest(".slide").dataset.i)});
+  document.querySelectorAll("[data-p]").forEach(p=>{p.textContent=buildOne(+p.closest(".slide").dataset.i)});updClaude();
   renderThumbs();if(all)S.full=true;
   clearTimeout(S.tm);S.tm=setTimeout(()=>{const f=S.full;S.full=false;S.slides.forEach((_,i)=>{if(f||i===S.cur){const c=thumbCanvas(i);if(c)drawSlide(c,i)}})},80);
 }
@@ -365,6 +381,39 @@ $("dlI").onclick=()=>{const fs=[];let n=1;S.slides.forEach((x,i)=>{if(!x.ill)ret
   fs.length?saveFile("referensi.zip",makeZip(fs)):toast("Belum ada gambar referensi")};
 $("flow").onclick=()=>window.open("https://labs.google/fx/tools/flow","_blank","noopener");
 document.addEventListener("pointermove",e=>{const c=e.target.closest&&e.target.closest(".card,.slide");if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty("--mx",(e.clientX-r.left)+"px");c.style.setProperty("--my",(e.clientY-r.top)+"px")});
+
+function parseSlides(txt){const out=[];let cur=null,last=null;
+  const T={cover:"cover",isi:"isi",content:"isi",cta:"cta",penutup:"cta",closing:"cta"},K={judul:"title",title:"title",isi:"body",body:"body",sorot:"hl",highlight:"hl",gambar:"img",image:"img"};
+  txt.split(/\r?\n/).forEach(line=>{
+    const h=line.match(/^\s*(?:#+\s*)?\**\s*SLIDE\s*\d*\s*(?:[|:-]\s*(\w+))?/i);
+    if(h){cur=Object.assign(newSlide(T[(h[1]||"").toLowerCase()]||"isi"),{});out.push(cur);last=null;return}
+    if(!cur)return;
+    const k=line.match(/^\s*\**\s*(judul|title|isi|body|sorot|highlight|gambar|image)\s*\**\s*:\s*(.*)$/i);
+    if(k){last=K[k[1].toLowerCase()];if(last!=="img")cur[last]=k[2].replace(/^\*+|\*+$/g,"").trim();return}
+    if(last&&(last==="title"||last==="body")&&line.trim())cur[last]+="\n"+line.trim()});
+  return out}
+$("impb").onclick=()=>{const list=parseSlides($("imp").value);
+  if(!list.length){toast("Format tidak terbaca. Pastikan ada baris SLIDE 1 | cover");return}
+  let cut=0;list.forEach(x=>{const c=clip(x.body);if(c!==x.body)cut++;x.body=c});
+  if($("impm").value==="append"){S.slides.push(...list);S.cur=S.slides.length-list.length}
+  else{S.slides=list;S.cur=0}
+  renderSlides();update(true);toast(list.length+" slide diimpor"+(cut?", "+cut+" isi dipotong sesuai batas":""))};
+function cnt(t){return $("lu").value==="kata"?(t.match(/\S+/g)||[]).length:t.length}
+function clip(t){const m=+$("lm").value||0;if(!m||!t)return t;
+  if($("lu").value==="kata"){const w=[...t.matchAll(/\S+/g)];return w.length>m?t.slice(0,w[m-1].index+w[m-1][0].length):t}
+  return t.length>m?t.slice(0,m):t}
+function updCount(card,s){const el=card.querySelector(".cn");if(!el)return;const n=cnt(s.body||""),m=+$("lm").value||0,u=$("lu").value==="kata"?"kata":"karakter";
+  el.textContent=m?n+"/"+m+" "+u:n+" "+u;el.classList.toggle("max",!!m&&n>=m)}
+function claudePrompt(){
+  const n=Math.min(12,Math.max(3,+$("jn").value||5)),m=+$("lm").value||30,u=$("lu").value,link=$("lk").value.trim()||"[LINK]";
+  return ["Baca website ini: "+link,"","Rangkum isinya jadi "+n+" slide carousel Instagram (rasio 4:5) dalam bahasa Indonesia, dengan urutan: 1 cover (hook yang bikin penasaran), "+(n-2)+" slide isi (satu poin utama per slide), dan 1 slide CTA di akhir.","","Aturan:","- Judul maksimal 8 kata.","- Isi maksimal "+m+" "+u+" per slide (cover dan CTA boleh lebih singkat).","- Gunakan kata-katamu sendiri, jangan menyalin kalimat asli dari website.","- Hanya pakai fakta yang ada di website. Jangan mengarang angka, nama, atau klaim.","- Sorot: 1 sampai 2 kata kunci yang tertulis persis di judul atau isi slide itu.","- Slide CTA berisi ajakan singkat, misalnya simpan, bagikan, atau kunjungi link.","- Jika website tidak bisa dibaca, beri tahu saya dan jangan mengarang isinya.","","Jawab HANYA dengan satu blok kode berformat persis seperti ini, tanpa teks lain:","SLIDE 1 | cover","Judul: ...","Isi: ...","Sorot: kata1, kata2","Gambar: saran gambar (opsional)","","SLIDE 2 | isi","Judul: ...","Isi: ...","Sorot: ...","","(lanjutkan sampai slide isi terakhir)","","SLIDE "+n+" | cta","Judul: ...","Isi: ...","Sorot: ..."].join("\n")}
+function updClaude(){const p=$("cp");if(p)p.textContent=claudePrompt()}
+$("cpb").onclick=()=>copyText(claudePrompt());
+["lk","jn","lm"].forEach(id=>$(id).addEventListener("input",updClaude));
+$("lu").addEventListener("change",updClaude);
+function applyLimit(){let cut=0;S.slides.forEach(x=>{const c=clip(x.body);if(c!==x.body){x.body=c;cut++}});updClaude();
+  if(cut){renderSlides();update(true);toast(cut+" isi dipotong sesuai batas baru")}else document.querySelectorAll(".slide").forEach((d,i)=>updCount(d,S.slides[i]))}
+["lu","lm"].forEach(id=>$(id).addEventListener("change",applyLimit));
 init();
 </script>
 </body>
