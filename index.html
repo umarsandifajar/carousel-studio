@@ -73,12 +73,30 @@ pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospa
 .hint{font-size:12px;color:var(--muted);margin:10px 0 0}
 footer{text-align:center;padding:0 16px calc(36px + env(safe-area-inset-bottom,0px));font-size:12px;font-weight:300;letter-spacing:.05em;color:var(--muted)}
 footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--line);transition:border-color .2s,color .2s}footer a:hover{color:var(--neon);border-bottom-color:var(--neon)}footer span{margin:0 8px;opacity:.5}
+ .top{grid-column:1/-1;margin-bottom:0}
+.strip{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding:8px 4px 10px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.th{flex:0 0 max(118px,calc((100% - 48px)/5));scroll-snap-align:start;position:relative;padding:0;border:2px solid var(--line);border-radius:14px;background:rgba(255,255,255,.05);cursor:pointer;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
+.th canvas{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:12px}
+.th:hover{transform:translateY(-4px) scale(1.03);border-color:rgba(165,232,255,.5)}
+.th[aria-pressed=true]{border-color:var(--neon);box-shadow:0 0 0 3px rgba(165,232,255,.2),0 10px 26px rgba(0,168,255,.32)}
+.th span{position:absolute;left:8px;top:8px;background:rgba(5,13,25,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:980px;padding:1px 9px;font-size:11px;font-weight:600}
+#sl{width:100%;margin:2px 0 0;accent-color:var(--neon)}#sl[hidden]{display:none}
+.sht{display:flex;align-items:baseline;min-width:0;flex:1}.sn{font-style:normal;color:var(--muted);font-size:12px;margin-left:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s cubic-bezier(.2,.8,.2,1)}
+.sb>div{overflow:hidden;min-height:0;visibility:hidden;padding:3px;margin:-3px;transition:visibility 0s .35s}
+.slide.on .sb{grid-template-rows:1fr}.slide.on .sb>div{visibility:visible;transition-delay:0s}
+.slide:not(.on) .sh{cursor:pointer;margin-bottom:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header><h1>Carousel Studio<i></i></h1><span class="sub" id="cnt"></span></header>
+<section class="card top"><h2>Preview semua slide</h2>
+<div class="strip" id="strip" aria-label="Daftar preview slide"></div>
+<input type="range" id="sl" min="0" max="1000" value="0" aria-label="Geser preview kiri dan kanan">
+<p class="hint">Klik sebuah slide untuk membuka kartunya di bawah. Geser slider atau swipe untuk melihat slide lainnya.</p></section>
 <main>
 <section class="card"><h2>1. Template</h2>
 <div class="tpls" id="tpls"></div>
@@ -106,9 +124,7 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 </main>
 
 <aside class="stick">
-<div class="card"><h2>Hasil slide 4:5</h2><div class="pills" id="pills"></div>
-<canvas id="cv" width="1080" height="1350" style="width:100%;aspect-ratio:4/5;border:1px solid var(--line);border-radius:6px;display:block"></canvas>
-<p class="hint">Ini hasil asli yang akan diunduh, bukan perkiraan.</p></div>
+
 <div class="card"><h2>Unduh</h2>
 <button class="btn main" id="zip">Generate &amp; unduh semua (ZIP)</button>
 <button class="btn" id="one" style="width:100%;margin-top:10px">Unduh slide ini (PNG)</button>
@@ -152,11 +168,11 @@ function init(){
 function renderTpls(){
   const box=$("tpls");box.innerHTML="";
   S.tpls.forEach((t,i)=>{const b=document.createElement("button");b.className="tpl";b.setAttribute("aria-pressed",i===S.sel);b.title=t.name;
-    const im=document.createElement("img");im.src=t.src;im.alt=t.name;b.appendChild(im);b.onclick=()=>{S.sel=i;renderTpls();update()};box.appendChild(b)});
+    const im=document.createElement("img");im.src=t.src;im.alt=t.name;b.appendChild(im);b.onclick=()=>{S.sel=i;renderTpls();update(true)};box.appendChild(b)});
   const a=document.createElement("button");a.className="tpl add";a.textContent="+";a.setAttribute("aria-label","Tambah template");a.onclick=()=>$("tplFile").click();box.appendChild(a);
 }
 const readFile=(f,cb)=>{const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f)};
-$("tplFile").onchange=e=>{const f=e.target.files[0];if(!f)return;readFile(f,src=>{S.tpls.push({name:f.name,src});store.set("tpls",S.tpls.slice(1));S.sel=S.tpls.length-1;renderTpls();update()})};
+$("tplFile").onchange=e=>{const f=e.target.files[0];if(!f)return;readFile(f,src=>{S.tpls.push({name:f.name,src});store.set("tpls",S.tpls.slice(1));S.sel=S.tpls.length-1;renderTpls();update(true)})};
 
 const PRESETS={"Minimalis":["minimal","Minimalist modern flat layout, generous spacing, clean geometric shapes."],"Futuristik":["tech","Futuristic tech look, clean geometric shapes, thin lines, high contrast, lots of negative space."],"Editorial":["editorial","Bold editorial layout, oversized headline, strong hierarchy, tight typographic rhythm."],"Lembut":["soft","Soft rounded friendly shapes, calm spacing, approachable flat illustration style."]};
 Object.keys(PRESETS).forEach(k=>{const b=document.createElement("button");b.textContent=k;b.onclick=()=>{$("look").value=PRESETS[k][0];$("style").value=PRESETS[k][1]+" Consistent look across all slides.";update()};$("chips").appendChild(b)});
@@ -164,7 +180,8 @@ Object.keys(PRESETS).forEach(k=>{const b=document.createElement("button");b.text
 function renderSlides(){
   const box=$("slides");box.innerHTML="";
   S.slides.forEach((s,i)=>{const d=document.createElement("div");d.className="slide"+(i===S.cur?" on":"");d.dataset.i=i;
-    d.innerHTML=`<div class="sh"><b>Slide ${i+1}</b><span><button class="btn" data-a="dup">Duplikat</button><button class="btn" data-a="del" ${S.slides.length<2?"disabled":""}>Hapus</button></span></div>
+    d.innerHTML=`<div class="sh"><span class="sht"><b>Slide ${i+1}</b><em class="sn">${(s.title||"").replace(/[<&]/g,"").slice(0,30)||"kosong"}</em></span><span><button class="btn" data-a="dup">Duplikat</button><button class="btn" data-a="del" ${S.slides.length<2?"disabled":""}>Hapus</button></span></div>
+<div class="sb"><div>
 <label>Tipe</label><select data-k="type"><option value="cover">Cover</option><option value="isi">Isi</option><option value="cta">Penutup</option></select>
 <label>Judul</label><textarea data-k="title" style="min-height:56px" placeholder="Tulis judul..."></textarea>
 <label>Isi</label><textarea data-k="body" style="min-height:56px" placeholder="Tulis isi konten..."></textarea>
@@ -175,16 +192,16 @@ function renderSlides(){
 <div class="mini"><div><label>Latar gambar</label><select data-k="bg"><option value="fade">Fade tepi</option><option value="cut">Hapus latar</option><option value="card">Kartu bulat</option><option value="orig">Asli</option></select></div><div><label>Warna gambar</label><select data-k="tone"><option value="orig">Asli</option><option value="duo">Duotone palet</option></select></div></div>
 <div class="mini"><div><label>Posisi gambar</label><select data-k="ip"><option value="bottom">Bawah</option><option value="top">Atas</option><option value="left">Kiri (teks di samping)</option><option value="right">Kanan (teks di samping)</option><option value="center">Tengah</option></select></div>
 <div><label>Ukuran gambar <b data-r="is">${s.is}%</b></label><input type="range" data-k="is" min="20" max="100" style="width:100%;accent-color:var(--neon)"></div></div>
-<details class="pd"><summary>Prompt AI slide ${i+1} (opsional)</summary><pre data-p></pre><button class="btn" data-a="cp">Salin prompt slide ${i+1}</button></details>`;
+<details class="pd"><summary>Prompt AI slide ${i+1} (opsional)</summary><pre data-p></pre><button class="btn" data-a="cp">Salin prompt slide ${i+1}</button></details></div></div>`;
     d.querySelectorAll("[data-k]").forEach(el=>el.value=s[el.dataset.k]);
     box.appendChild(d)});
 }
 const slidesEl=$("slides");
 slidesEl.addEventListener("input",e=>{const c=e.target.closest(".slide");if(!c||!e.target.dataset.k)return;const i=+c.dataset.i,k=e.target.dataset.k;
-  S.slides[i][k]=k==="is"?+e.target.value:e.target.value;if(k==="is")c.querySelector("[data-r=is]").textContent=e.target.value+"%";
+  S.slides[i][k]=k==="is"?+e.target.value:e.target.value;if(k==="title")c.querySelector(".sn").textContent=e.target.value.slice(0,30)||"kosong";if(k==="is")c.querySelector("[data-r=is]").textContent=e.target.value+"%";
   S.cur=i;markCur();update()});
 slidesEl.addEventListener("focusin",e=>{const c=e.target.closest(".slide");if(c&&+c.dataset.i!==S.cur){S.cur=+c.dataset.i;markCur();update()}});
-slidesEl.addEventListener("click",e=>{const c=e.target.closest(".slide");if(!c)return;const i=+c.dataset.i,a=e.target.closest("[data-a]");if(!a)return;
+slidesEl.addEventListener("click",e=>{const c=e.target.closest(".slide");if(!c)return;const i=+c.dataset.i,a=e.target.closest("[data-a]");if(!a){if(e.target.closest(".sh")&&i!==S.cur)selectSlide(i);return}
   if(a.dataset.a==="pick")c.querySelector("[data-a=file]").click();
   if(a.dataset.a==="cp")copyText(c.querySelector("[data-p]").textContent);
   if(a.dataset.a==="del"&&S.slides.length>1){S.slides.splice(i,1);S.cur=Math.min(S.cur,S.slides.length-1);renderSlides();update()}
@@ -232,12 +249,21 @@ STYLE: ${$("style").value.trim()}
 TEXT RULES: Montserrat, ${al}, text ${va} of the content area, color #F4FAFF. Render all text exactly as written, spelled correctly, no extra words. Content must never overlap header or footer.${$("ex").value.trim()?"\nEXTRA NOTE: "+$("ex").value.trim():""}
 
 NEGATIVE: no other colors, no watermark, no extra logos, no borders, no drop shadows, no gradient background, no photo-realistic background, no changes to header/footer, no misspelled text.`}
-function update(){
+function thumbCanvas(i){const b=$("strip").children[i];return b&&b.querySelector("canvas")}
+function syncSl(){const st=$("strip"),sl=$("sl"),m=st.scrollWidth-st.clientWidth;sl.hidden=m<=1;sl.value=m>0?Math.round(st.scrollLeft/m*1000):0}
+function renderThumbs(){
+  const st=$("strip");
+  if(st.children.length!==S.slides.length){st.innerHTML="";S.slides.forEach((_,i)=>{const b=document.createElement("button");b.className="th";b.setAttribute("aria-label","Slide "+(i+1));b.innerHTML='<canvas width="1080" height="1350"></canvas><span>'+(i+1)+'</span>';b.onclick=()=>selectSlide(i);st.appendChild(b)});S.full=true}
+  [...st.children].forEach((b,i)=>b.setAttribute("aria-pressed",i===S.cur));syncSl()}
+function selectSlide(i){S.cur=i;markCur();renderThumbs();
+  const th=$("strip").children[i];if(th)th.scrollIntoView({behavior:"smooth",block:"nearest",inline:"nearest"});
+  setTimeout(()=>{const c=document.querySelectorAll(".slide")[i];if(c)c.scrollIntoView({behavior:"smooth",block:"nearest"})},200)}
+function update(all){
   const t=S.tpls[S.sel];if(!t)return;
   $("tsv").textContent=$("ts").value+" px";$("bsv").textContent=$("bs").value+" px";$("tolv").textContent=$("tol").value;$("cnt").textContent=S.slides.length+" slide";
-  const pl=$("pills");pl.innerHTML="";S.slides.forEach((_,i)=>{const b=document.createElement("button");b.textContent=i+1;b.setAttribute("aria-pressed",i===S.cur);b.setAttribute("aria-label","Slide "+(i+1));b.onclick=()=>{S.cur=i;markCur();update()};pl.appendChild(b)});
   document.querySelectorAll("[data-p]").forEach(p=>{p.textContent=buildOne(+p.closest(".slide").dataset.i)});
-    clearTimeout(S.tm);S.tm=setTimeout(()=>drawSlide($("cv"),S.cur),80);
+  renderThumbs();if(all)S.full=true;
+  clearTimeout(S.tm);S.tm=setTimeout(()=>{const f=S.full;S.full=false;S.slides.forEach((_,i)=>{if(f||i===S.cur){const c=thumbCanvas(i);if(c)drawSlide(c,i)}})},80);
 }
 const imgCache={};const loadImg=src=>imgCache[src]||(imgCache[src]=new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src}));
 function wrapT(x,text,maxW){const lines=[];let off=0;const sp=x.measureText(" ").width;
@@ -273,7 +299,8 @@ function procImg(img,bg,tone,tol){
 async function drawSlide(cv,idx){
   const s=S.slides[idx],t=S.tpls[S.sel];if(!s||!t)return;
   try{await Promise.all([document.fonts.load("800 40px Montserrat"),document.fonts.load("400 40px Montserrat"),document.fonts.load("700 24px Montserrat")])}catch(e){}
-  const x=cv.getContext("2d");x.clearRect(0,0,1080,1350);x.drawImage(await loadImg(t.src),0,0,1080,1350);
+  const tok=cv._t=(cv._t||0)+1;const tpl=await loadImg(t.src),raw=s.ill?await loadImg(s.ill.src):null;if(cv._t!==tok)return;
+  const x=cv.getContext("2d");x.clearRect(0,0,1080,1350);x.drawImage(tpl,0,0,1080,1350);
   const look=$("look").value,L=165,R=918,W=R-L,B=1170,GAP=36,GAP2=44,N=S.slides.length,num=$("num").checked,Tt=num?214:170,areaH=B-Tt;
   const pad=look==="soft"?36:0,ts0=Math.round(+$("ts").value*mult(s.type)),bs0=+$("bs").value,al=$("al").value,va=$("va").value,ws=words(s);
   const title=look==="editorial"?s.title.toUpperCase():s.title,tlh=look==="editorial"?1.05:1.12;
@@ -285,7 +312,7 @@ async function drawSlide(cv,idx){
     const rule=look==="editorial"&&th?36:0;return{tl,bl,th,bh,rule,tsz,bsz,H:rule+th+(th&&bh?GAP:0)+bh}};
   let Ls=layout(ts0,bs0,W-2*pad),img=null,iw=0,ih=0,ar=1,side=false;
   const tbh=()=>Ls.H?Ls.H+2*pad:0;
-  if(s.ill){img=procImg(await loadImg(s.ill.src),s.bg||"orig",s.tone||"orig",+$("tol").value);ar=img.height/img.width;iw=W*s.is/100;ih=iw*ar;
+  if(s.ill){img=procImg(raw,s.bg||"orig",s.tone||"orig",+$("tol").value);ar=img.height/img.width;iw=W*s.is/100;ih=iw*ar;
     const fit=ih<=areaH-(tbh()?GAP:0)-tbh();
     side=Ls.H>0&&(s.ip==="right"||s.ip==="left"||!fit);
     if(side){iw=Math.min(iw,W*.55);ih=iw*ar;if(ih>areaH){ih=areaH;iw=ih/ar}
@@ -329,7 +356,9 @@ $("one").onclick=async()=>{toast("Merender...");saveFile("slide-"+String(S.cur+1
 $("zip").onclick=async()=>{toast("Merender "+S.slides.length+" slide...");const fs=[];
   for(let i=0;i<S.slides.length;i++){fs.push({name:"slide-"+String(i+1).padStart(2,"0")+".png",data:new Uint8Array(await (await renderBlob(i)).arrayBuffer())})}
   saveFile("carousel.zip",makeZip(fs))};
-window.addEventListener("resize",update);
+window.addEventListener("resize",syncSl);
+$("strip").addEventListener("scroll",syncSl);
+$("sl").addEventListener("input",()=>{const st=$("strip");st.scrollLeft=$("sl").value/1000*(st.scrollWidth-st.clientWidth)});
 async function copyText(t){try{await navigator.clipboard.writeText(t);toast("Prompt tersalin")}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(_){}ta.remove();toast(ok?"Prompt tersalin":"Gagal menyalin, salin manual")}}
 $("dlT").onclick=()=>saveFile("image1-template.png",new Blob([dataBytes(S.tpls[S.sel].src)],{type:"image/png"}));
 $("dlI").onclick=()=>{const fs=[];let n=1;S.slides.forEach((x,i)=>{if(!x.ill)return;n++;fs.push({name:"image"+n+"-slide"+(i+1)+".png",data:dataBytes(x.ill.src)})});
