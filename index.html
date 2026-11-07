@@ -133,7 +133,8 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <div class="apibox" style="margin-top:12px;padding-top:4px;border-top:1px solid var(--line)">
 <label for="gk">API key Gemini (untuk mode otomatis)</label><input type="password" id="gk" placeholder="AIza..." autocomplete="off">
 <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="gks"> Ingat key di browser ini</label>
-<label for="gm">Model</label><input type="text" id="gm" value="gemini-3-flash-preview" list="gml"><datalist id="gml"><option value="gemini-3-flash-preview"><option value="gemini-2.5-flash"><option value="gemini-2.5-pro"></datalist>
+<label for="gm">Model</label><select id="gm"><option value="gemini-3-flash-preview">gemini-3-flash-preview</option><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-2.5-pro">gemini-2.5-pro</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option></select>
+<input type="text" id="gm2" placeholder="atau ketik nama model lain (opsional)" style="margin-top:8px">
 <button class="btn main" id="gauto" style="margin-top:12px;padding:11px">Generate otomatis dengan Gemini API</button>
 <p class="hint" id="gst"></p>
 <p class="hint">Buat key gratis di <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color:var(--neon)">Google AI Studio</a>. Mode otomatis hanya jalan di file HTML lokal atau GitHub Pages, dan hanya untuk video publik. Key disimpan di browser ini saja, jangan dipakai di komputer umum.</p></div>
@@ -444,20 +445,22 @@ $("ytb").onclick=()=>{const l=$("yt").value.trim();
   if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
   window.open($("ys").value,"_blank","noopener");copyText(l,"Link disalin. Tempel di situs transkrip.")};
 ["yt","tr","gl"].forEach(id=>$(id).addEventListener("input",updClaude));
+function ytNorm(l){const m=l.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/);return m?"https://www.youtube.com/watch?v="+m[1]:null}
 const GK="gemkey";
 try{const k=localStorage.getItem(GK);if(k){$("gk").value=k;$("gks").checked=true}}catch(e){}
 function saveKey(){try{if($("gks").checked)localStorage.setItem(GK,$("gk").value.trim());else localStorage.removeItem(GK)}catch(e){}}
 $("gk").addEventListener("input",saveKey);$("gks").addEventListener("change",saveKey);
 $("gauto").onclick=async()=>{
-  const l=$("gl").value.trim(),key=$("gk").value.trim(),model=$("gm").value.trim(),st=$("gst"),btn=$("gauto");
+  const l=$("gl").value.trim(),key=$("gk").value.trim(),model=($("gm2").value.trim()||$("gm").value),st=$("gst"),btn=$("gauto"),nl=ytNorm(l);
   if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
+  if(!nl){toast("Link YouTube tidak valid");return}
   if(!key){toast("Isi API key Gemini dulu");return}
   if(!model){toast("Isi nama model dulu");return}
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),180000);
   btn.disabled=true;st.textContent="Memproses video... biasanya 20 sampai 90 detik.";
   try{
     const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
-      body:JSON.stringify({contents:[{parts:[{text:claudePrompt(true)},{file_data:{file_uri:l}}]}],generationConfig:{temperature:.4}}),signal:ctl.signal});
+      body:JSON.stringify({contents:[{parts:[{text:claudePrompt(true)},{file_data:{file_uri:nl}}]}],generationConfig:{temperature:.4}}),signal:ctl.signal});
     const j=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error((j.error&&j.error.message)||("HTTP "+r.status));
     const parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
@@ -466,7 +469,7 @@ $("gauto").onclick=async()=>{
     $("imp").value=txt;$("impb").click();st.textContent="Selesai. Slide sudah diimpor."}
   catch(e){st.textContent=e.name==="AbortError"?"Waktu habis. Coba lagi atau pakai video yang lebih pendek."
     :e instanceof TypeError?"Tidak bisa terhubung ke API Gemini. Kalau halaman ini dibuka dari dalam Claude, koneksi ke situs luar diblokir. Pakai file HTML lokal atau GitHub Pages, atau pakai cara manual."
-    :"Gagal: "+e.message+" (cek API key, nama model, atau batas kuota)."}
+    :/MIME/i.test(e.message)?"Gemini tidak mengenali link sebagai video YouTube. Pastikan videonya publik (bukan privat, unlisted, atau dibatasi umur/wilayah), lalu coba video lain atau model lain.":"Gagal: "+e.message+" (cek API key, nama model, atau batas kuota)."}
   finally{clearTimeout(to);btn.disabled=false}};
 $("gmb").onclick=()=>{const l=$("gl").value.trim();
   if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
