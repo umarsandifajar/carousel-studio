@@ -126,10 +126,30 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 
 <section class="card"><h2>3. Slide</h2><details class="imp"><summary>Impor dari teks (hasil rangkuman Claude)</summary>
 <p class="hint" style="margin-top:0"><b>Langkah 1.</b> Isi link, salin prompt, lalu tempel di chat Claude.</p>
-<label for="lk">Link website</label><input type="text" id="lk" placeholder="https://contoh.com/artikel">
+<div class="seg" id="srcs" style="margin-bottom:6px"><button data-v="web" aria-pressed="true">Website</button><button data-v="gem" aria-pressed="false">YouTube (Gemini)</button><button data-v="yt" aria-pressed="false">YouTube (transkrip)</button></div>
+<div id="p-web"><label for="lk">Link website</label><input type="text" id="lk" placeholder="https://contoh.com/artikel"></div>
+<div id="p-gem" hidden>
+<label for="gl">Link YouTube</label><input type="text" id="gl" placeholder="https://www.youtube.com/watch?v=...">
+<div class="apibox" style="margin-top:12px;padding-top:4px;border-top:1px solid var(--line)">
+<label for="gk">API key Gemini (untuk mode otomatis)</label><input type="password" id="gk" placeholder="AIza..." autocomplete="off">
+<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="gks"> Ingat key di browser ini</label>
+<label for="gm">Model</label><input type="text" id="gm" value="gemini-3-flash-preview" list="gml"><datalist id="gml"><option value="gemini-3-flash-preview"><option value="gemini-2.5-flash"><option value="gemini-2.5-pro"></datalist>
+<button class="btn main" id="gauto" style="margin-top:12px;padding:11px">Generate otomatis dengan Gemini API</button>
+<p class="hint" id="gst"></p>
+<p class="hint">Buat key gratis di <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color:var(--neon)">Google AI Studio</a>. Mode otomatis hanya jalan di file HTML lokal atau GitHub Pages, dan hanya untuk video publik. Key disimpan di browser ini saja, jangan dipakai di komputer umum.</p></div>
+<button class="btn" id="gmb" style="width:100%;margin-top:6px">Atau manual: salin prompt &amp; buka Gemini</button>
+<p class="hint">Cara manual: tempel prompt di Gemini, salin jawabannya, lalu tempel di kolom impor di bawah.</p></div>
+<div id="p-yt" hidden>
+<label for="yt">Link YouTube</label><input type="text" id="yt" placeholder="https://www.youtube.com/watch?v=...">
+<label for="ys">Situs transkrip gratis</label>
+<select id="ys"><option value="https://youtubetotranscript.com/">YouTubeToTranscript</option><option value="https://crikk.com/youtube-transcript">Crikk (batas 15 video per 24 jam)</option><option value="https://tubescript.cc/transcript-youtube">TubeScript (batas 3 per hari)</option><option value="https://notegpt.io/youtube-to-transcript">NoteGPT</option></select>
+<button class="btn" id="ytb" style="width:100%;margin-top:10px">Salin link &amp; buka situs transkrip</button>
+<p class="hint">Di situs itu tempel link, ambil transkripnya, salin teksnya, lalu tempel di kolom bawah.</p>
+<label for="tr">Transkrip (tempel di sini)</label><textarea id="tr" style="min-height:130px" placeholder="Tempel transkrip video..."></textarea>
+<p class="hint" id="trc"></p></div>
 <label for="jn">Jumlah slide (termasuk cover dan CTA)</label><input type="number" id="jn" value="5" min="3" max="12">
-<label>Prompt untuk Claude (otomatis)</label><pre id="cp"></pre>
-<button class="btn main" id="cpb" style="margin-top:10px;padding:11px">Salin prompt untuk Claude</button>
+<label>Prompt untuk Claude atau Gemini (otomatis)</label><pre id="cp"></pre>
+<button class="btn main" id="cpb" style="margin-top:10px;padding:11px">Salin prompt</button>
 <p class="hint"><b>Langkah 2.</b> Tempel balasan Claude di bawah ini.</p>
 <textarea id="imp" placeholder="SLIDE 1 | cover&#10;Judul: ...&#10;Isi: ...&#10;Sorot: kata1, kata2&#10;&#10;SLIDE 2 | isi&#10;Judul: ...&#10;Isi: ...&#10;&#10;SLIDE 5 | cta&#10;Judul: ...&#10;Isi: ..." style="min-height:150px"></textarea>
 <label for="impm">Cara impor</label><select id="impm"><option value="replace">Ganti semua slide</option><option value="append">Tambah di belakang slide yang ada</option></select>
@@ -375,7 +395,7 @@ $("zip").onclick=async()=>{toast("Merender "+S.slides.length+" slide...");const 
 window.addEventListener("resize",syncSl);
 $("strip").addEventListener("scroll",syncSl);
 $("sl").addEventListener("input",()=>{const st=$("strip");st.scrollLeft=$("sl").value/1000*(st.scrollWidth-st.clientWidth)});
-async function copyText(t){try{await navigator.clipboard.writeText(t);toast("Prompt tersalin")}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(_){}ta.remove();toast(ok?"Prompt tersalin":"Gagal menyalin, salin manual")}}
+async function copyText(t,msg){try{await navigator.clipboard.writeText(t);toast(msg||"Prompt tersalin")}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(_){}ta.remove();toast(ok?"Prompt tersalin":"Gagal menyalin, salin manual")}}
 $("dlT").onclick=()=>saveFile("image1-template.png",new Blob([dataBytes(S.tpls[S.sel].src)],{type:"image/png"}));
 $("dlI").onclick=()=>{const fs=[];let n=1;S.slides.forEach((x,i)=>{if(!x.ill)return;n++;fs.push({name:"image"+n+"-slide"+(i+1)+".png",data:dataBytes(x.ill.src)})});
   fs.length?saveFile("referensi.zip",makeZip(fs)):toast("Belum ada gambar referensi")};
@@ -404,11 +424,53 @@ function clip(t){const m=+$("lm").value||0;if(!m||!t)return t;
   return t.length>m?t.slice(0,m):t}
 function updCount(card,s){const el=card.querySelector(".cn");if(!el)return;const n=cnt(s.body||""),m=+$("lm").value||0,u=$("lu").value==="kata"?"kata":"karakter";
   el.textContent=m?n+"/"+m+" "+u:n+" "+u;el.classList.toggle("max",!!m&&n>=m)}
-function claudePrompt(){
-  const n=Math.min(12,Math.max(3,+$("jn").value||5)),m=+$("lm").value||30,u=$("lu").value,link=$("lk").value.trim()||"[LINK]";
-  return ["Baca website ini: "+link,"","Rangkum isinya jadi "+n+" slide carousel Instagram (rasio 4:5) dalam bahasa Indonesia, dengan urutan: 1 cover (hook yang bikin penasaran), "+(n-2)+" slide isi (satu poin utama per slide), dan 1 slide CTA di akhir.","","Aturan:","- Judul maksimal 8 kata.","- Isi maksimal "+m+" "+u+" per slide (cover dan CTA boleh lebih singkat).","- Gunakan kata-katamu sendiri, jangan menyalin kalimat asli dari website.","- Hanya pakai fakta yang ada di website. Jangan mengarang angka, nama, atau klaim.","- Sorot: 1 sampai 2 kata kunci yang tertulis persis di judul atau isi slide itu.","- Slide CTA berisi ajakan singkat, misalnya simpan, bagikan, atau kunjungi link.","- Jika website tidak bisa dibaca, beri tahu saya dan jangan mengarang isinya.","","Jawab HANYA dengan satu blok kode berformat persis seperti ini, tanpa teks lain:","SLIDE 1 | cover","Judul: ...","Isi: ...","Sorot: kata1, kata2","Gambar: saran gambar (opsional)","","SLIDE 2 | isi","Judul: ...","Isi: ...","Sorot: ...","","(lanjutkan sampai slide isi terakhir)","","SLIDE "+n+" | cta","Judul: ...","Isi: ...","Sorot: ..."].join("\n")}
-function updClaude(){const p=$("cp");if(p)p.textContent=claudePrompt()}
-$("cpb").onclick=()=>copyText(claudePrompt());
+function cleanTr(t){return t.split(/\r?\n/).map(l=>l.replace(/^\s*\[?\d{1,2}:\d{2}(?::\d{2})?\]?\s*/,"").trim()).filter(Boolean).join(" ").replace(/\s+/g," ").trim()}
+function claudePrompt(full){
+  const n=Math.min(12,Math.max(3,+$("jn").value||5)),m=+$("lm").value||30,u=$("lu").value,yt=S.src==="yt",gem=S.src==="gem";
+  let head;
+  if(yt){const tr=cleanTr($("tr").value),w=(tr.match(/\S+/g)||[]).length,link=$("yt").value.trim();
+    head=["Berikut transkrip sebuah video YouTube"+(link?" ("+link+")":"")+":",'"""',tr?(full?tr:"[transkrip "+w+" kata disertakan]"):"[TEMPEL TRANSKRIP]",'"""'];}
+  else if(gem)head=["Tonton video YouTube ini: "+($("gl").value.trim()||"[LINK]")];
+  else head=["Baca website ini: "+($("lk").value.trim()||"[LINK]")];
+  const src=yt?"transkrip":gem?"video":"website";
+  return [...head,"","Rangkum isinya jadi "+n+" slide carousel Instagram (rasio 4:5) dalam bahasa Indonesia, dengan urutan: 1 cover (hook yang bikin penasaran), "+(n-2)+" slide isi (satu poin utama per slide), dan 1 slide CTA di akhir.","","Aturan:","- Judul maksimal 8 kata.","- Isi maksimal "+m+" "+u+" per slide (cover dan CTA boleh lebih singkat).","- Gunakan kata-katamu sendiri, jangan menyalin kalimat asli dari "+src+".","- Hanya pakai fakta yang ada di "+src+". Jangan mengarang angka, nama, atau klaim.",...(yt?["- Transkrip dibuat otomatis dan bisa salah menulis nama atau istilah. Jika ragu, tulis secara netral dan jangan menebak."]:gem?["- Jika ragu mengenai nama atau istilah yang disebut, tulis secara netral dan jangan menebak."]:[]),"- Sorot: 1 sampai 2 kata kunci yang tertulis persis di judul atau isi slide itu.","- Slide CTA berisi ajakan singkat, misalnya simpan, bagikan, atau kunjungi link.","- Jika "+(yt?"transkrip kosong atau terlalu pendek":gem?"video tidak bisa diakses":"website tidak bisa dibaca")+", beri tahu saya dan jangan mengarang isinya.","","Jawab HANYA dengan satu blok kode berformat persis seperti ini, tanpa teks lain:","SLIDE 1 | cover","Judul: ...","Isi: ...","Sorot: kata1, kata2","Gambar: saran gambar (opsional)","","SLIDE 2 | isi","Judul: ...","Isi: ...","Sorot: ...","","(lanjutkan sampai slide isi terakhir)","","SLIDE "+n+" | cta","Judul: ...","Isi: ...","Sorot: ..."].join("\n")}
+function updClaude(){const p=$("cp");if(p)p.textContent=claudePrompt(false);
+  const w=(cleanTr($("tr").value).match(/\S+/g)||[]).length;$("trc").textContent=w?w+" kata (penanda waktu dibersihkan otomatis)":""}
+$("cpb").onclick=()=>{if(S.src==="yt"&&!cleanTr($("tr").value)){toast("Tempel transkrip dulu di kolom Transkrip");return}copyText(claudePrompt(true))};
+S.src="web";
+$("srcs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.src=b.dataset.v;
+  $("srcs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));$("p-web").hidden=S.src!=="web";$("p-gem").hidden=S.src!=="gem";$("p-yt").hidden=S.src!=="yt";updClaude()});
+$("ytb").onclick=()=>{const l=$("yt").value.trim();
+  if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
+  window.open($("ys").value,"_blank","noopener");copyText(l,"Link disalin. Tempel di situs transkrip.")};
+["yt","tr","gl"].forEach(id=>$(id).addEventListener("input",updClaude));
+const GK="gemkey";
+try{const k=localStorage.getItem(GK);if(k){$("gk").value=k;$("gks").checked=true}}catch(e){}
+function saveKey(){try{if($("gks").checked)localStorage.setItem(GK,$("gk").value.trim());else localStorage.removeItem(GK)}catch(e){}}
+$("gk").addEventListener("input",saveKey);$("gks").addEventListener("change",saveKey);
+$("gauto").onclick=async()=>{
+  const l=$("gl").value.trim(),key=$("gk").value.trim(),model=$("gm").value.trim(),st=$("gst"),btn=$("gauto");
+  if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
+  if(!key){toast("Isi API key Gemini dulu");return}
+  if(!model){toast("Isi nama model dulu");return}
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),180000);
+  btn.disabled=true;st.textContent="Memproses video... biasanya 20 sampai 90 detik.";
+  try{
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
+      body:JSON.stringify({contents:[{parts:[{text:claudePrompt(true)},{file_data:{file_uri:l}}]}],generationConfig:{temperature:.4}}),signal:ctl.signal});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error((j.error&&j.error.message)||("HTTP "+r.status));
+    const parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
+    const txt=parts.map(p=>p.text||"").join("\n");
+    if(!parseSlides(txt).length)throw new Error("Jawaban Gemini tidak berformat SLIDE. Coba lagi atau pakai cara manual.");
+    $("imp").value=txt;$("impb").click();st.textContent="Selesai. Slide sudah diimpor."}
+  catch(e){st.textContent=e.name==="AbortError"?"Waktu habis. Coba lagi atau pakai video yang lebih pendek."
+    :e instanceof TypeError?"Tidak bisa terhubung ke API Gemini. Kalau halaman ini dibuka dari dalam Claude, koneksi ke situs luar diblokir. Pakai file HTML lokal atau GitHub Pages, atau pakai cara manual."
+    :"Gagal: "+e.message+" (cek API key, nama model, atau batas kuota)."}
+  finally{clearTimeout(to);btn.disabled=false}};
+$("gmb").onclick=()=>{const l=$("gl").value.trim();
+  if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
+  window.open("https://gemini.google.com/app","_blank","noopener");copyText(claudePrompt(true),"Prompt disalin. Tempel di Gemini.")};
 ["lk","jn","lm"].forEach(id=>$(id).addEventListener("input",updClaude));
 $("lu").addEventListener("change",updClaude);
 function applyLimit(){let cut=0;S.slides.forEach(x=>{const c=clip(x.body);if(c!==x.body){x.body=c;cut++}});updClaude();
