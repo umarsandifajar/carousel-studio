@@ -110,6 +110,11 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 .lb[hidden]{display:none}.lb:not([hidden]){display:flex}
 .lbi{display:flex;flex-direction:column;align-items:center;gap:14px;max-height:100%}
 .lbi img{max-height:calc(100vh - 110px);max-width:100%;width:auto;height:auto;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.cr{display:flex;align-items:center;gap:10px;margin:8px 0}.cr>span{width:46px;font-size:12px;color:var(--muted)}
+.cr input[type=color]{flex:0 0 42px;width:42px;height:32px;border:1px solid var(--line);border-radius:10px;padding:2px;background:rgba(255,255,255,.07);cursor:pointer}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw button{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.4);padding:0;cursor:pointer;transition:transform .15s}
+.sw button:hover{transform:scale(1.2)}.sw button[aria-pressed=true]{outline:2px solid var(--neon);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -139,6 +144,12 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <label>Ukuran font judul</label><div class="range"><input type="range" id="ts" min="48" max="140" value="84"><b id="tsv"></b></div>
 <label>Ukuran font isi</label><div class="range"><input type="range" id="bs" min="24" max="64" value="38"><b id="bsv"></b></div>
 <label>Catatan tambahan (opsional)</label><input type="text" id="ex" placeholder="Contoh: tambahkan nomor slide kecil">
+<label>Warna font</label>
+<div class="cr"><span>Judul</span><input type="color" id="ct" value="#F4FAFF" aria-label="Warna judul"><div class="sw" data-t="ct"></div></div>
+<div class="cr"><span>Isi</span><input type="color" id="cb" value="#F4FAFF" aria-label="Warna isi"><div class="sw" data-t="cb"></div></div>
+<div class="cr"><span>Sorot</span><input type="color" id="ch" value="#A5E8FF" aria-label="Warna kata sorot"><div class="sw" data-t="ch"></div></div>
+<div class="chips"><button id="cpl">Preset template terang</button><button id="cpd">Preset template gelap</button></div>
+<p class="hint">Pilih dari lingkaran warna atau kotak pemilih untuk warna bebas. Warna tersimpan otomatis di browser ini.</p>
 <label>Batas panjang isi konten (per slide)</label>
 <div class="row"><select id="lu"><option value="kata">Jumlah kata</option><option value="karakter">Jumlah karakter</option></select><input type="number" id="lm" value="30" min="5" max="600"></div>
 <p class="hint">Berlaku saat mengetik dan saat impor, dan otomatis masuk ke prompt Claude. Judul tidak dibatasi di sini.</p>
@@ -156,6 +167,7 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="gks"> Ingat key di browser ini</label>
 <label for="gm">Model</label><select id="gm"><option value="gemini-3-flash-preview">gemini-3-flash-preview</option><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-2.5-pro">gemini-2.5-pro</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option></select>
 <input type="text" id="gm2" placeholder="atau ketik nama model lain (opsional)" style="margin-top:8px">
+<div id="slot-gem"></div>
 <button class="btn main" id="gauto" style="margin-top:12px;padding:11px">Generate otomatis dengan Gemini API</button>
 <p class="hint" id="gst"></p>
 <p class="hint">Buat key gratis di <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color:var(--neon)">Google AI Studio</a>. Mode otomatis hanya jalan di file HTML lokal atau GitHub Pages, dan hanya untuk video publik. Key disimpan di browser ini saja, jangan dipakai di komputer umum.</p></div>
@@ -169,7 +181,7 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <p class="hint">Di situs itu tempel link, ambil transkripnya, salin teksnya, lalu tempel di kolom bawah.</p>
 <label for="tr">Transkrip (tempel di sini)</label><textarea id="tr" style="min-height:130px" placeholder="Tempel transkrip video..."></textarea>
 <p class="hint" id="trc"></p></div>
-<label for="jn">Jumlah slide (termasuk cover dan CTA)</label><input type="number" id="jn" value="5" min="3" max="12">
+<div id="slot-main"><div id="jnw"><label for="jn">Jumlah slide (termasuk cover dan CTA)</label><input type="number" id="jn" value="5" min="3" max="12"></div></div>
 <label>Prompt untuk Claude atau Gemini (otomatis)</label><pre id="cp"></pre>
 <button class="btn main" id="cpb" style="margin-top:10px;padding:11px">Salin prompt</button>
 <p class="hint"><b>Langkah 2.</b> Tempel balasan Claude di bawah ini.</p>
@@ -301,7 +313,7 @@ ${refs}
 
 ${note}
 
-COLOR PALETTE (use ONLY these): Background #050D19, Cyan Blue #00A8FF, Ice Blue #A5E8FF, Text #F4FAFF.
+COLOR PALETTE (use ONLY these): Background #050D19, Cyan Blue #00A8FF, Ice Blue #A5E8FF, plus the text colors given below.
 
 FIXED TEMPLATE ELEMENTS (do not change, move, or restyle):
 - Flat #050D19 background, no gradient, texture, or glow.
@@ -311,11 +323,11 @@ FIXED TEMPLATE ELEMENTS (do not change, move, or restyle):
 CONTENT AREA (only part that changes): y=170px to y=1170px, x=165px to x=918px.
 Headline (Bold ~${ts}px): "${s.title}"
 Body (Regular ~${bs}px): ${s.body?`"${s.body}"`:"none"}
-${w.length?"Highlight in #A5E8FF: "+w.map(x=>`"${x}"`).join(", "):"Highlight: none"}
+${w.length?"Highlight in "+$("ch").value+": "+w.map(x=>`"${x}"`).join(", "):"Highlight: none"}
 ${ill}${$("num").checked?`\nSlide number: "${i+1}/${N}" small, #F4FAFF, inside the content area.`:""}
 
 STYLE: ${$("style").value.trim()}
-TEXT RULES: Montserrat, ${al}, text ${va} of the content area, color #F4FAFF. Render all text exactly as written, spelled correctly, no extra words. Content must never overlap header or footer.${$("ex").value.trim()?"\nEXTRA NOTE: "+$("ex").value.trim():""}
+TEXT RULES: Montserrat, ${al}, text ${va} of the content area, headline color ${$("ct").value}, body color ${$("cb").value}, highlight color ${$("ch").value}. Render all text exactly as written, spelled correctly, no extra words. Content must never overlap header or footer.${$("ex").value.trim()?"\nEXTRA NOTE: "+$("ex").value.trim():""}
 
 NEGATIVE: no other colors, no watermark, no extra logos, no borders, no drop shadows, no gradient background, no photo-realistic background, no changes to header/footer, no misspelled text.`}
 function thumbCanvas(i){const b=$("strip").children[i];return b&&b.querySelector("canvas")}
@@ -343,9 +355,9 @@ function wrapT(x,text,maxW){const lines=[];let off=0;const sp=x.measureText(" ")
     lines.push({cur,w}.cur.length?cur:[]);off+=p.length+1});
   return lines.map(l=>({words:l,w:l.reduce((a,b,i)=>a+b.w+(i?sp:0),0)}))}
 function maskOf(text,ws){const m=new Array(text.length).fill(false);ws.forEach(w=>{const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");let r;while((r=re.exec(text))){for(let i=r.index;i<r.index+r[0].length;i++)m[i]=true;if(!r[0].length)break}});return m}
-function drawLines(x,lines,m,x0,y,maxW,al,lh,px){const sp=x.measureText(" ").width;
+function drawLines(x,lines,m,x0,y,maxW,al,lh,px,base,hi){const sp=x.measureText(" ").width;
   lines.forEach((ln,li)=>{let cx=al==="center"?x0+(maxW-ln.w)/2:x0;const ly=y+li*lh;
-    ln.words.forEach(w=>{let i=0;while(i<w.t.length){let j=i;const h=m[w.s+i];while(j<w.t.length&&m[w.s+j]===h)j++;const run=w.t.slice(i,j);x.fillStyle=h?"#A5E8FF":"#F4FAFF";x.fillText(run,cx,ly);cx+=x.measureText(run).width;i=j}cx+=sp})})}
+    ln.words.forEach(w=>{let i=0;while(i<w.t.length){let j=i;const h=m[w.s+i];while(j<w.t.length&&m[w.s+j]===h)j++;const run=w.t.slice(i,j);x.fillStyle=h?hi:base;x.fillText(run,cx,ly);cx+=x.measureText(run).width;i=j}cx+=sp})})}
 const procCache={};
 function procImg(img,bg,tone,tol){
   const key=img.src.length+"|"+img.src.slice(-40)+bg+tone+tol;if(procCache[key])return procCache[key];
@@ -379,6 +391,7 @@ async function drawSlide(cv,idx){
     x.font=`800 ${tsz}px Montserrat, sans-serif`;LS(spc(tsz));const tl=title.trim()?wrapT(x,title,width):[];const th=tl.length*tsz*tlh;
     x.font=`400 ${bsz}px Montserrat, sans-serif`;LS("0px");const bl=s.body.trim()?wrapT(x,s.body,width):[];const bh=bl.length*bsz*1.45;
     const rule=look==="editorial"&&th?36:0;return{tl,bl,th,bh,rule,tsz,bsz,H:rule+th+(th&&bh?GAP:0)+bh}};
+  const ct=$("ct").value,cb=$("cb").value,hc=$("ch").value;
   let Ls=layout(ts0,bs0,W-2*pad),img=null,iw=0,ih=0,ar=1,side=false;
   const tbh=()=>Ls.H?Ls.H+2*pad:0;
   if(s.ill){img=procImg(raw,s.bg||"orig",s.tone||"orig",+$("tol").value);ar=img.height/img.width;iw=W*s.is/100;ih=iw*ar;
@@ -395,14 +408,14 @@ async function drawSlide(cv,idx){
     if(img&&s.ip==="top"){iy=gy;ty=gy+ih+(tbh()?GAP:0)+pad}else{ty=gy+pad;iy=gy+tbh()+(tbh()?GAP:0)}
     ix=(s.ip==="center"||al==="center")?L+(W-iw)/2:L}
   const TX=colX+pad,TW=colW-2*pad;
-  if(look==="tech"){x.strokeStyle="#00A8FF";x.lineWidth=4;x.beginPath();x.moveTo(L,214);x.lineTo(L,170);x.lineTo(L+44,170);x.moveTo(R,B-44);x.lineTo(R,B);x.lineTo(R-44,B);x.stroke()}
+  if(look==="tech"){x.strokeStyle=hc;x.lineWidth=4;x.beginPath();x.moveTo(L,214);x.lineTo(L,170);x.lineTo(L+44,170);x.moveTo(R,B-44);x.lineTo(R,B);x.lineTo(R-44,B);x.stroke()}
   if(look==="soft"&&Ls.H){x.fillStyle="rgba(0,168,255,.14)";x.strokeStyle="rgba(0,168,255,.55)";x.lineWidth=2;x.beginPath();x.roundRect(colX,ty-pad,colW,Ls.H+pad*2,36);x.fill();x.stroke()}
-  if(num){x.font="700 26px Montserrat, sans-serif";LS("0px");x.textAlign="right";x.fillStyle="#00A8FF";x.fillText((idx+1)+"/"+N,R,170);x.textAlign="left"}
+  if(num){x.font="700 26px Montserrat, sans-serif";LS("0px");x.textAlign="right";x.fillStyle=hc;x.fillText((idx+1)+"/"+N,R,170);x.textAlign="left"}
   if(img)x.drawImage(img,ix,iy,iw,ih);
   let y=ty;
-  if(Ls.rule){x.fillStyle="#A5E8FF";const rw=90,rx=al==="center"?TX+(TW-rw)/2:TX;x.fillRect(rx,y,rw,8);y+=Ls.rule}
-  if(Ls.th){x.font=`800 ${Ls.tsz}px Montserrat, sans-serif`;LS(spc(Ls.tsz));drawLines(x,Ls.tl,maskOf(title,ws),TX,y,TW,al,Ls.tsz*tlh,Ls.tsz);y+=Ls.th+GAP}
-  if(Ls.bh){x.font=`400 ${Ls.bsz}px Montserrat, sans-serif`;LS("0px");drawLines(x,Ls.bl,maskOf(s.body,ws),TX,y,TW,al,Ls.bsz*1.45,Ls.bsz)}
+  if(Ls.rule){x.fillStyle=hc;const rw=90,rx=al==="center"?TX+(TW-rw)/2:TX;x.fillRect(rx,y,rw,8);y+=Ls.rule}
+  if(Ls.th){x.font=`800 ${Ls.tsz}px Montserrat, sans-serif`;LS(spc(Ls.tsz));drawLines(x,Ls.tl,maskOf(title,ws),TX,y,TW,al,Ls.tsz*tlh,Ls.tsz,ct,hc);y+=Ls.th+GAP}
+  if(Ls.bh){x.font=`400 ${Ls.bsz}px Montserrat, sans-serif`;LS("0px");drawLines(x,Ls.bl,maskOf(s.body,ws),TX,y,TW,al,Ls.bsz*1.45,Ls.bsz,cb,hc)}
 }
 const T32=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 const crc32=u=>{let c=-1;for(let i=0;i<u.length;i++)c=T32[(c^u[i])&255]^(c>>>8);return(c^-1)>>>0};
@@ -472,7 +485,7 @@ function updClaude(){const p=$("cp");if(p)p.textContent=claudePrompt(false);
 $("cpb").onclick=()=>{if(S.src==="yt"&&!cleanTr($("tr").value)){toast("Tempel transkrip dulu di kolom Transkrip");return}copyText(claudePrompt(true))};
 S.src="web";
 $("srcs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.src=b.dataset.v;
-  $("srcs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));$("p-web").hidden=S.src!=="web";$("p-gem").hidden=S.src!=="gem";$("p-yt").hidden=S.src!=="yt";updClaude()});
+  $("srcs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));$("p-web").hidden=S.src!=="web";$("p-gem").hidden=S.src!=="gem";$("p-yt").hidden=S.src!=="yt";$(S.src==="gem"?"slot-gem":"slot-main").appendChild($("jnw"));updClaude()});
 $("ytb").onclick=()=>{const l=$("yt").value.trim();
   if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
   window.open($("ys").value,"_blank","noopener");copyText(l,"Link disalin. Tempel di situs transkrip.")};
@@ -516,6 +529,17 @@ const lbClose=()=>{$("lb").hidden=true;$("qrOpen").focus()};
 $("qrOpen").onclick=lbOpen;$("qrOpen2").onclick=lbOpen;$("lbx").onclick=lbClose;
 $("lb").addEventListener("click",e=>{if(e.target===$("lb"))lbClose()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("lb").hidden)lbClose()});
+const CK="csColors",SWC=["#FFFFFF","#F4FAFF","#A5E8FF","#00A8FF","#0077C2","#334155","#0B1220","#FFB020","#FF5C7A"];
+function saveColors(){try{localStorage.setItem(CK,JSON.stringify({ct:$("ct").value,cb:$("cb").value,ch:$("ch").value}))}catch(e){}}
+function syncSw(){document.querySelectorAll(".sw").forEach(w=>{const v=$(w.dataset.t).value.toLowerCase();w.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c.toLowerCase()===v))})}
+function setColors(o){["ct","cb","ch"].forEach(k=>{if(/^#[0-9a-f]{6}$/i.test(o[k]||""))$(k).value=o[k]});saveColors();syncSw();update(true)}
+try{const c=JSON.parse(localStorage.getItem(CK)||"null");if(c)["ct","cb","ch"].forEach(k=>{if(/^#[0-9a-f]{6}$/i.test(c[k]||""))$(k).value=c[k]})}catch(e){}
+document.querySelectorAll(".sw").forEach(w=>SWC.forEach(c=>{const b=document.createElement("button");b.type="button";b.dataset.c=c;b.style.background=c;b.title=c;b.setAttribute("aria-label",c);
+  b.onclick=()=>{$(w.dataset.t).value=c;saveColors();syncSw();update(true)};w.appendChild(b)}));
+["ct","cb","ch"].forEach(k=>$(k).addEventListener("input",()=>{saveColors();syncSw()}));
+$("cpl").onclick=()=>setColors({ct:"#0B1220",cb:"#334155",ch:"#0077C2"});
+$("cpd").onclick=()=>setColors({ct:"#F4FAFF",cb:"#F4FAFF",ch:"#A5E8FF"});
+syncSw();
 init();
 </script>
 </body>
