@@ -129,16 +129,26 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 .znav{flex:0 0 46px;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.1);color:var(--text);display:grid;place-items:center;cursor:pointer;transition:background .2s,transform .2s,opacity .2s}
 .znav:hover:not(:disabled){background:var(--violet);transform:scale(1.1)}.znav:disabled{opacity:.3;cursor:default}
 @media(max-width:560px){.znav{position:absolute;bottom:14px;background:rgba(5,13,25,.8)}#zp{left:calc(50% - 60px)}#zn{right:calc(50% - 60px)}#zcv{height:min(calc(100vh - 190px),calc((100vw - 32px)*1.25))}}
+.pvw{position:relative}
+#pvc{display:block;margin:0 auto;max-width:100%;max-height:max(320px,calc(100vh - 340px));width:auto;height:auto;border-radius:14px;border:1px solid var(--line);box-shadow:0 12px 40px rgba(0,0,0,.45);cursor:zoom-in;transition:transform .3s}
+#pvc:hover{transform:scale(1.015)}
+.pn{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:rgba(5,13,25,.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--text);display:grid;place-items:center;padding:0;cursor:pointer;transition:background .2s,opacity .2s,transform .2s;z-index:2}
+#pvp{left:4px}#pvn{right:4px}.pn:hover:not(:disabled){background:var(--violet);transform:translateY(-50%) scale(1.1)}.pn:disabled{opacity:.25;cursor:default}
+.dots{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;min-height:14px}
+.dot{position:relative;width:11px;height:11px;border-radius:50%;border:0;padding:0;background:rgba(255,255,255,.28);cursor:pointer;transition:transform .25s,background .25s,box-shadow .25s}
+.dot::before{content:"";position:absolute;inset:-8px}
+.dot:hover{background:rgba(255,255,255,.6);transform:scale(1.3)}
+.dot[aria-current=true]{background:var(--neon);transform:scale(1.25);box-shadow:0 0 0 3px rgba(165,232,255,.22),0 0 14px 2px var(--neon)}
+@media(min-width:901px){.stick{max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin;padding:4px;margin:-4px}}
+.slide.dz{border-color:var(--neon);background:rgba(165,232,255,.1);box-shadow:0 0 0 2px var(--neon),0 10px 30px rgba(0,168,255,.2)}
+.slide.dz .drop{background:rgba(165,232,255,.16);border-color:var(--neon);border-style:solid}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header><h1>Carousel Studio<i></i></h1><span class="sub" id="cnt"></span></header>
-<section class="card top"><div class="ph"><h2>Preview semua slide</h2><button class="btn" id="zall">Perbesar</button></div>
-<div class="strip" id="strip" aria-label="Daftar preview slide"></div>
-<input type="range" id="sl" min="0" max="1000" value="0" aria-label="Geser preview kiri dan kanan">
-<p class="hint">Klik sebuah slide untuk membuka kartunya di bawah. Geser slider atau swipe untuk melihat slide lainnya.</p></section>
+
 <main>
 <section class="card"><h2>1. Template</h2>
 <div class="tpls" id="tpls"></div>
@@ -208,6 +218,10 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 </main>
 
 <aside class="stick">
+<div class="card"><div class="ph"><h2>Preview slide</h2><button class="btn" id="zall">Perbesar</button></div>
+<div class="pvw"><button class="pn" id="pvp" aria-label="Slide sebelumnya"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><canvas id="pvc" width="1080" height="1350" title="Klik untuk memperbesar"></canvas><button class="pn" id="pvn" aria-label="Slide berikutnya"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div>
+<div class="dots" id="dots" aria-label="Halaman slide"></div>
+<p class="hint" id="pvh" style="text-align:center"></p></div>
 
 <div class="card"><h2>Unduh</h2>
 <button class="btn main" id="zip">Generate &amp; unduh semua (ZIP)</button>
@@ -286,7 +300,7 @@ function renderSlides(){
 <label>Isi <span class="cn"></span></label><textarea data-k="body" style="min-height:56px" placeholder="Tulis isi konten..."></textarea>
 <label>Kata sorot (koma)</label><input type="text" data-k="hl">
 <label>Gambar referensi (opsional)</label>
-<div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,""):"Klik untuk unggah gambar"}</span></div>
+<div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,"")+" (klik atau seret untuk ganti)":"Klik atau seret gambar dari Explorer ke sini"}</span></div>
 <input type="file" accept="image/*" hidden data-a="file">
 <div class="mini"><div><label>Latar gambar</label><select data-k="bg"><option value="fade">Fade tepi</option><option value="cut">Hapus latar</option><option value="card">Kartu bulat</option><option value="orig">Asli</option></select></div><div><label>Warna gambar</label><select data-k="tone"><option value="orig">Asli</option><option value="duo">Duotone palet</option></select></div></div>
 <div class="mini"><div><label>Posisi gambar</label><select data-k="ip"><option value="bottom">Bawah</option><option value="top">Atas</option><option value="left">Kiri (teks di samping)</option><option value="right">Kanan (teks di samping)</option><option value="center">Tengah</option></select></div>
@@ -348,23 +362,18 @@ STYLE: ${$("style").value.trim()}
 TEXT RULES: Montserrat, ${al}, text ${va} of the content area, headline color ${$("ct").value}, body color ${$("cb").value}, highlight color ${$("ch").value}. Render all text exactly as written, spelled correctly, no extra words. Content must never overlap header or footer.${$("ex").value.trim()?"\nEXTRA NOTE: "+$("ex").value.trim():""}
 
 NEGATIVE: no other colors, no watermark, no extra logos, no borders, no drop shadows, no gradient background, no photo-realistic background, no changes to header/footer, no misspelled text.`}
-function thumbCanvas(i){const w=$("strip").children[i];return w&&w.querySelector("canvas")}
-function syncSl(){const st=$("strip"),sl=$("sl"),m=st.scrollWidth-st.clientWidth;sl.hidden=m<=1;sl.value=m>0?Math.round(st.scrollLeft/m*1000):0}
-function renderThumbs(){
-  const st=$("strip");
-  if(st.children.length!==S.slides.length){st.innerHTML="";S.slides.forEach((_,i)=>{const w=document.createElement("div");w.className="thw";
-    w.innerHTML='<button class="th" aria-label="Slide '+(i+1)+'"><canvas width="1080" height="1350"></canvas><span>'+(i+1)+'</span></button><button class="zm" aria-label="Perbesar slide '+(i+1)+'" title="Perbesar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>';
-    w.querySelector(".th").onclick=()=>selectSlide(i);w.querySelector(".zm").onclick=()=>openZoom(i);st.appendChild(w)});S.full=true}
-  [...st.children].forEach((w,i)=>w.querySelector(".th").setAttribute("aria-pressed",i===S.cur));syncSl()}
-function selectSlide(i){S.cur=i;markCur();renderThumbs();
-  const th=$("strip").children[i];if(th)th.scrollIntoView({behavior:"smooth",block:"nearest",inline:"nearest"});
+function renderDots(){
+  const d=$("dots");
+  if(d.children.length!==S.slides.length){d.innerHTML="";S.slides.forEach((_,i)=>{const b=document.createElement("button");b.className="dot";b.type="button";b.setAttribute("aria-label","Slide "+(i+1));b.onclick=()=>selectSlide(i);d.appendChild(b)})}
+  [...d.children].forEach((b,i)=>b.setAttribute("aria-current",i===S.cur));
+  $("pvp").disabled=S.cur<=0;$("pvn").disabled=S.cur>=S.slides.length-1;$("pvh").textContent="Slide "+(S.cur+1)+" dari "+S.slides.length}
+function selectSlide(i){if(i<0||i>=S.slides.length)return;S.cur=i;markCur();renderDots();drawSlide($("pvc"),i);
   setTimeout(()=>{const c=document.querySelectorAll(".slide")[i];if(c)c.scrollIntoView({behavior:"smooth",block:"nearest"})},200)}
 function update(all){
   const t=S.tpls[S.sel];if(!t)return;
   $("tsv").textContent=$("ts").value+" px";$("bsv").textContent=$("bs").value+" px";$("tolv").textContent=$("tol").value;$("cnt").textContent=S.slides.length+" slide";
   document.querySelectorAll("[data-p]").forEach(p=>{p.textContent=buildOne(+p.closest(".slide").dataset.i)});updClaude();
-  renderThumbs();if(all)S.full=true;
-  clearTimeout(S.tm);S.tm=setTimeout(()=>{const f=S.full;S.full=false;S.slides.forEach((_,i)=>{if(f||i===S.cur){const c=thumbCanvas(i);if(c)drawSlide(c,i)}})},80);
+  renderDots();clearTimeout(S.tm);S.tm=setTimeout(()=>drawSlide($("pvc"),S.cur),80);
 }
 const imgCache={};const loadImg=src=>imgCache[src]||(imgCache[src]=new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src}));
 function wrapT(x,text,maxW){const lines=[];let off=0;const sp=x.measureText(" ").width;
@@ -458,9 +467,6 @@ $("one").onclick=async()=>{toast("Merender...");saveFile("slide-"+String(S.cur+1
 $("zip").onclick=async()=>{toast("Merender "+S.slides.length+" slide...");const fs=[];
   for(let i=0;i<S.slides.length;i++){fs.push({name:"slide-"+String(i+1).padStart(2,"0")+".png",data:new Uint8Array(await (await renderBlob(i)).arrayBuffer())})}
   saveFile("carousel.zip",makeZip(fs))};
-window.addEventListener("resize",syncSl);
-$("strip").addEventListener("scroll",syncSl);
-$("sl").addEventListener("input",()=>{const st=$("strip");st.scrollLeft=$("sl").value/1000*(st.scrollWidth-st.clientWidth)});
 async function copyText(t,msg){try{await navigator.clipboard.writeText(t);toast(msg||"Prompt tersalin")}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(_){}ta.remove();toast(ok?"Prompt tersalin":"Gagal menyalin, salin manual")}}
 $("dlT").onclick=()=>saveFile("image1-template.png",new Blob([dataBytes(S.tpls[S.sel].src)],{type:"image/png"}));
 $("dlI").onclick=()=>{const fs=[];let n=1;S.slides.forEach((x,i)=>{if(!x.ill)return;n++;fs.push({name:"image"+n+"-slide"+(i+1)+".png",data:dataBytes(x.ill.src)})});
@@ -570,6 +576,14 @@ $("zb").addEventListener("click",e=>{if(e.target===$("zb"))closeZoom()});
 document.addEventListener("keydown",e=>{if($("zb").hidden)return;if(e.key==="Escape")closeZoom();else if(e.key==="ArrowLeft")zoomGo(-1);else if(e.key==="ArrowRight")zoomGo(1)});
 let tx=null;$("zcv").addEventListener("touchstart",e=>{tx=e.touches[0].clientX},{passive:true});
 $("zcv").addEventListener("touchend",e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(d)>50)zoomGo(d<0?1:-1)});
+$("pvp").onclick=()=>selectSlide(S.cur-1);$("pvn").onclick=()=>selectSlide(S.cur+1);$("pvc").onclick=()=>openZoom(S.cur);
+function imgFile(dt){return [...((dt&&dt.files)||[])].find(f=>f.type.startsWith("image/"))}
+slidesEl.addEventListener("dragover",e=>{const c=e.target.closest(".slide");if(!c)return;e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";c.classList.add("dz")});
+slidesEl.addEventListener("dragleave",e=>{const c=e.target.closest(".slide");if(c&&!c.contains(e.relatedTarget))c.classList.remove("dz")});
+slidesEl.addEventListener("drop",e=>{const c=e.target.closest(".slide");if(!c)return;e.preventDefault();c.classList.remove("dz");
+  const f=imgFile(e.dataTransfer);if(!f){toast("File harus berupa gambar (PNG, JPG, atau WebP)");return}
+  const i=+c.dataset.i;readFile(f,src=>{S.slides[i].ill={name:f.name,src};S.cur=i;renderSlides();update(true);toast("Gambar ditambahkan ke slide "+(i+1))})});
+["dragover","drop"].forEach(t=>window.addEventListener(t,e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes("Files"))e.preventDefault()}));
 init();
 </script>
 </body>
