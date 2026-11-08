@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Carousel Studio</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050D19;--violet:#00A8FF;--neon:#A5E8FF;--text:#F4FAFF;--panel:rgba(255,255,255,.06);--line:rgba(255,255,255,.13);--muted:rgba(244,250,255,.62);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -40,9 +40,10 @@ button:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
 .seg button[aria-pressed=true]{background:var(--violet);border-color:var(--violet);color:#fff}
 .btn.main{background:linear-gradient(135deg,var(--violet),var(--neon));border:none;color:var(--bg);font-weight:700;width:100%;padding:14px;font-size:15px;box-shadow:0 8px 24px rgba(0,168,255,.35)}
 .btn.main:hover{box-shadow:0 12px 32px rgba(0,168,255,.5);transform:translateY(-2px)}
-.tpls{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 8px}
-.tpl{flex:0 0 88px;border:2px solid var(--line);border-radius:14px;background:rgba(255,255,255,.05);padding:0;cursor:pointer;transition:transform .25s,border-color .25s,box-shadow .25s}
-.tpl:hover{transform:translateY(-3px) scale(1.04);border-color:rgba(165,232,255,.5)}
+.tpls{display:flex;gap:12px;overflow-x:auto;padding:12px 10px 8px}
+.tw{flex:0 0 88px;position:relative;transition:transform .25s}.tw:hover{transform:translateY(-3px) scale(1.04)}
+.tpl{display:block;width:100%;border:2px solid var(--line);border-radius:14px;background:rgba(255,255,255,.05);padding:0;cursor:pointer;transition:transform .25s,border-color .25s,box-shadow .25s}
+.tpl:hover{border-color:rgba(165,232,255,.5)}
 .tpl img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:11px}
 .tpl[aria-pressed=true]{border-color:var(--neon);box-shadow:0 0 0 3px rgba(165,232,255,.2),0 8px 22px rgba(0,168,255,.3)}
 .tpl.add{display:grid;place-items:center;color:var(--muted);aspect-ratio:4/5;font-size:26px}
@@ -142,6 +143,8 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 @media(min-width:901px){.stick{max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin;padding:4px;margin:-4px}}
 .slide.dz{border-color:var(--neon);background:rgba(165,232,255,.1);box-shadow:0 0 0 2px var(--neon),0 10px 30px rgba(0,168,255,.2)}
 .slide.dz .drop{background:rgba(165,232,255,.16);border-color:var(--neon);border-style:solid}
+.tx{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;border-radius:980px;border:1px solid rgba(255,255,255,.35);background:rgba(5,13,25,.9);color:var(--text);display:grid;place-items:center;padding:0;cursor:pointer;z-index:2;font:600 11px/1 inherit;transition:background .2s,transform .2s}
+.tx:hover{background:#FF5C7A;transform:scale(1.12)}.tx.ask{background:#FF5C7A;color:#fff;padding:0 9px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -183,10 +186,10 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <section class="card"><h2>3. Slide</h2><details class="imp"><summary>Impor dari teks (hasil rangkuman Claude)</summary>
 <p class="hint" style="margin-top:0"><b>Langkah 1.</b> Isi link, salin prompt, lalu tempel di chat Claude.</p>
 <div class="seg" id="srcs" style="margin-bottom:6px"><button data-v="web" aria-pressed="true">Website</button><button data-v="gem" aria-pressed="false">YouTube (Gemini)</button><button data-v="yt" aria-pressed="false">YouTube (transkrip)</button></div>
-<div id="p-web"><label for="lk">Link website</label><input type="text" id="lk" placeholder="https://contoh.com/artikel"></div>
+<div id="p-web"><label for="lk">Link website</label><input type="text" id="lk" placeholder="https://contoh.com/artikel"><div id="api-web"></div></div>
 <div id="p-gem" hidden>
 <label for="gl">Link YouTube</label><input type="text" id="gl" placeholder="https://www.youtube.com/watch?v=...">
-<div class="apibox" style="margin-top:12px;padding-top:4px;border-top:1px solid var(--line)">
+<div id="api-gem"><div class="apibox" id="apibox" style="margin-top:12px;padding-top:4px;border-top:1px solid var(--line)">
 <label for="gk">API key Gemini (untuk mode otomatis)</label><input type="password" id="gk" placeholder="AIza..." autocomplete="off">
 <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="gks"> Ingat key di browser ini</label>
 <label for="gm">Model</label><select id="gm"><option value="gemini-3-flash-preview">gemini-3-flash-preview</option><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-2.5-pro">gemini-2.5-pro</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option></select>
@@ -194,7 +197,7 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <div id="slot-gem"></div>
 <button class="btn main" id="gauto" style="margin-top:12px;padding:11px">Generate otomatis dengan Gemini API</button>
 <p class="hint" id="gst"></p>
-<p class="hint">Buat key gratis di <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color:var(--neon)">Google AI Studio</a>. Mode otomatis hanya jalan di file HTML lokal atau GitHub Pages, dan hanya untuk video publik. Key disimpan di browser ini saja, jangan dipakai di komputer umum.</p></div>
+<p class="hint">Buat key gratis di <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" style="color:var(--neon)">Google AI Studio</a>. Mode otomatis hanya jalan di file HTML lokal atau GitHub Pages. Untuk YouTube, videonya harus publik. Untuk website, halamannya harus bisa dibuka tanpa login. Key disimpan di browser ini saja, jangan dipakai di komputer umum.</p></div></div>
 <button class="btn" id="gmb" style="width:100%;margin-top:6px">Atau manual: salin prompt &amp; buka Gemini</button>
 <p class="hint">Cara manual: tempel prompt di Gemini, salin jawabannya, lalu tempel di kolom impor di bawah.</p></div>
 <div id="p-yt" hidden>
@@ -203,13 +206,13 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <select id="ys"><option value="https://youtubetotranscript.com/">YouTubeToTranscript</option><option value="https://crikk.com/youtube-transcript">Crikk (batas 15 video per 24 jam)</option><option value="https://tubescript.cc/transcript-youtube">TubeScript (batas 3 per hari)</option><option value="https://notegpt.io/youtube-to-transcript">NoteGPT</option></select>
 <button class="btn" id="ytb" style="width:100%;margin-top:10px">Salin link &amp; buka situs transkrip</button>
 <p class="hint">Di situs itu tempel link, ambil transkripnya, salin teksnya, lalu tempel di kolom bawah.</p>
-<label for="tr">Transkrip (tempel di sini)</label><textarea id="tr" style="min-height:130px" placeholder="Tempel transkrip video..."></textarea>
+<label for="tr">Transkrip (tempel di sini)</label><textarea id="tr" dir="auto" style="min-height:130px" placeholder="Tempel transkrip video..."></textarea>
 <p class="hint" id="trc"></p></div>
 <div id="slot-main"><div id="jnw"><label for="jn">Jumlah slide (termasuk cover dan CTA)</label><input type="number" id="jn" value="5" min="3" max="12"></div></div>
 <label>Prompt untuk Claude atau Gemini (otomatis)</label><pre id="cp"></pre>
 <button class="btn main" id="cpb" style="margin-top:10px;padding:11px">Salin prompt</button>
 <p class="hint"><b>Langkah 2.</b> Tempel balasan Claude di bawah ini.</p>
-<textarea id="imp" placeholder="SLIDE 1 | cover&#10;Judul: ...&#10;Isi: ...&#10;Sorot: kata1, kata2&#10;&#10;SLIDE 2 | isi&#10;Judul: ...&#10;Isi: ...&#10;&#10;SLIDE 5 | cta&#10;Judul: ...&#10;Isi: ..." style="min-height:150px"></textarea>
+<textarea id="imp" dir="auto" placeholder="SLIDE 1 | cover&#10;Judul: ...&#10;Isi: ...&#10;Sorot: kata1, kata2&#10;&#10;SLIDE 2 | isi&#10;Judul: ...&#10;Isi: ...&#10;&#10;SLIDE 5 | cta&#10;Judul: ...&#10;Isi: ..." style="min-height:150px"></textarea>
 <label for="impm">Cara impor</label><select id="impm"><option value="replace">Ganti semua slide</option><option value="append">Tambah di belakang slide yang ada</option></select>
 <button class="btn main" id="impb" style="margin-top:12px;padding:11px">Impor slide</button>
 <p class="hint">Tipe slide: cover, isi, atau cta. Baris Gambar diabaikan, gambar tetap diunggah di kartu slide.</p></details>
@@ -278,11 +281,18 @@ function init(){
   const go=()=>{S.tpls=[{name:"Sandiana (bawaan)",src:defaultTpl()},...saved];renderTpls();renderSlides();update()};
   const f=document.fonts;(f?f.load("700 22px Montserrat").then(()=>f.load("400 24px Montserrat")):Promise.resolve()).then(go,go);
 }
+const XSVG='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function delTpl(i){S.tpls.splice(i,1);if(S.sel===i)S.sel=0;else if(S.sel>i)S.sel--;store.set("tpls",S.tpls.slice(1));renderTpls();update(true);toast("Template dihapus")}
 function renderTpls(){
   const box=$("tpls");box.innerHTML="";
-  S.tpls.forEach((t,i)=>{const b=document.createElement("button");b.className="tpl";b.setAttribute("aria-pressed",i===S.sel);b.title=t.name;
-    const im=document.createElement("img");im.src=t.src;im.alt=t.name;b.appendChild(im);b.onclick=()=>{S.sel=i;renderTpls();update(true)};box.appendChild(b)});
-  const a=document.createElement("button");a.className="tpl add";a.textContent="+";a.setAttribute("aria-label","Tambah template");a.onclick=()=>$("tplFile").click();box.appendChild(a);
+  S.tpls.forEach((t,i)=>{const w=document.createElement("div");w.className="tw";
+    const b=document.createElement("button");b.className="tpl";b.setAttribute("aria-pressed",i===S.sel);b.title=t.name;
+    const im=document.createElement("img");im.src=t.src;im.alt=t.name;b.appendChild(im);b.onclick=()=>{S.sel=i;renderTpls();update(true)};w.appendChild(b);
+    if(i>0){const x=document.createElement("button");x.type="button";x.className="tx";x.title="Hapus template";x.setAttribute("aria-label","Hapus template "+t.name);x.innerHTML=XSVG;
+      x.onclick=e=>{e.stopPropagation();if(!x.classList.contains("ask")){x.classList.add("ask");x.textContent="Hapus?";setTimeout(()=>{if(x.isConnected){x.classList.remove("ask");x.innerHTML=XSVG}},3000);return}delTpl(i)};w.appendChild(x)}
+    box.appendChild(w)});
+  const w=document.createElement("div");w.className="tw";
+  const a=document.createElement("button");a.className="tpl add";a.textContent="+";a.setAttribute("aria-label","Tambah template");a.onclick=()=>$("tplFile").click();w.appendChild(a);box.appendChild(w);
 }
 const readFile=(f,cb)=>{const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f)};
 $("tplFile").onchange=e=>{const f=e.target.files[0];if(!f)return;readFile(f,src=>{S.tpls.push({name:f.name,src});store.set("tpls",S.tpls.slice(1));S.sel=S.tpls.length-1;renderTpls();update(true)})};
@@ -296,8 +306,8 @@ function renderSlides(){
     d.innerHTML=`<div class="sh"><span class="sht"><b>Slide ${i+1}</b><em class="sn">${(s.title||"").replace(/[<&]/g,"").slice(0,30)||"kosong"}</em></span><span><button class="btn" data-a="dup">Duplikat</button><button class="btn" data-a="del" ${S.slides.length<2?"disabled":""}>Hapus</button></span></div>
 <div class="sb"><div>
 <label>Tipe</label><select data-k="type"><option value="cover">Cover</option><option value="isi">Isi</option><option value="cta">Penutup</option></select>
-<label>Judul</label><textarea data-k="title" style="min-height:56px" placeholder="Tulis judul..."></textarea>
-<label>Isi <span class="cn"></span></label><textarea data-k="body" style="min-height:56px" placeholder="Tulis isi konten..."></textarea>
+<label>Judul</label><textarea data-k="title" dir="auto" style="min-height:56px" placeholder="Tulis judul..."></textarea>
+<label>Isi <span class="cn"></span></label><textarea data-k="body" dir="auto" style="min-height:56px" placeholder="Tulis isi konten..."></textarea>
 <label>Kata sorot (koma)</label><input type="text" data-k="hl">
 <label>Gambar referensi (opsional)</label>
 <div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,"")+" (klik atau seret untuk ganti)":"Klik atau seret gambar dari Explorer ke sini"}</span></div>
@@ -359,7 +369,7 @@ ${w.length?"Highlight in "+$("ch").value+": "+w.map(x=>`"${x}"`).join(", "):"Hig
 ${ill}${$("num").checked?`\nSlide number: "${i+1}/${N}" small, #F4FAFF, inside the content area.`:""}
 
 STYLE: ${$("style").value.trim()}
-TEXT RULES: Montserrat, ${al}, text ${va} of the content area, headline color ${$("ct").value}, body color ${$("cb").value}, highlight color ${$("ch").value}. Render all text exactly as written, spelled correctly, no extra words. Content must never overlap header or footer.${$("ex").value.trim()?"\nEXTRA NOTE: "+$("ex").value.trim():""}
+TEXT RULES: Montserrat, ${al}, text ${va} of the content area, headline color ${$("ct").value}, body color ${$("cb").value}, highlight color ${$("ch").value}. Render all text exactly as written, spelled correctly, no extra words.${RTL.test((s.title||"")+(s.body||""))?" Arabic text must be right-to-left with correctly joined letters and all diacritics (harakat) preserved; never reorder or alter Arabic words.":""} Content must never overlap header or footer.${$("ex").value.trim()?"\nEXTRA NOTE: "+$("ex").value.trim():""}
 
 NEGATIVE: no other colors, no watermark, no extra logos, no borders, no drop shadows, no gradient background, no photo-realistic background, no changes to header/footer, no misspelled text.`}
 function renderDots(){
@@ -376,17 +386,27 @@ function update(all){
   renderDots();clearTimeout(S.tm);S.tm=setTimeout(()=>drawSlide($("pvc"),S.cur),80);
 }
 const imgCache={};const loadImg=src=>imgCache[src]||(imgCache[src]=new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src}));
-function wrapT(x,text,maxW){const lines=[];let off=0;const sp=x.measureText(" ").width;
-  text.split("\n").forEach(p=>{let cur=[],w=0,pos=off;
+const RTL=/[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/,AR='Amiri, "Noto Naskh Arabic", "Traditional Arabic", serif';
+function wrapT(x,text,maxW,ff,ls){const out=[];let off=0;
+  text.split("\n").forEach(p=>{const rtl=RTL.test(p),font=ff(rtl);x.font=font;if("direction" in x)x.direction=rtl?"rtl":"ltr";if("letterSpacing" in x)x.letterSpacing=rtl?"0px":ls;
+    const sp=x.measureText(" ").width;let cur=[],pos=off;
+    const wd=()=>cur.reduce((a,b,i)=>a+b.w+(i?sp:0),0);
+    const flush=()=>{out.push({words:cur,rtl,font,sp,ls:rtl?"0px":ls,w:wd(),hm:rtl?1.4:1});cur=[]};
     p.split(" ").forEach(word=>{if(word===""){pos++;return}const ww=x.measureText(word).width;
-      if(cur.length&&w+sp+ww>maxW){lines.push(cur);cur=[];w=0}
-      w+=(cur.length?sp:0)+ww;cur.push({t:word,s:pos,w:ww});pos+=word.length+1});
-    lines.push({cur,w}.cur.length?cur:[]);off+=p.length+1});
-  return lines.map(l=>({words:l,w:l.reduce((a,b,i)=>a+b.w+(i?sp:0),0)}))}
+      if(cur.length&&wd()+sp+ww>maxW)flush();
+      cur.push({t:word,s:pos,w:ww});pos+=word.length+1});
+    flush();off+=p.length+1});
+  if("direction" in x)x.direction="ltr";return out}
 function maskOf(text,ws){const m=new Array(text.length).fill(false);ws.forEach(w=>{const re=new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");let r;while((r=re.exec(text))){for(let i=r.index;i<r.index+r[0].length;i++)m[i]=true;if(!r[0].length)break}});return m}
-function drawLines(x,lines,m,x0,y,maxW,al,lh,px,base,hi){const sp=x.measureText(" ").width;
-  lines.forEach((ln,li)=>{let cx=al==="center"?x0+(maxW-ln.w)/2:x0;const ly=y+li*lh;
-    ln.words.forEach(w=>{let i=0;while(i<w.t.length){let j=i;const h=m[w.s+i];while(j<w.t.length&&m[w.s+j]===h)j++;const run=w.t.slice(i,j);x.fillStyle=h?hi:base;x.fillText(run,cx,ly);cx+=x.measureText(run).width;i=j}cx+=sp})})}
+function drawLines(x,lines,m,x0,y,maxW,al,lh,px,base,hi){let yy=y;
+  lines.forEach(ln=>{x.font=ln.font;if("letterSpacing" in x)x.letterSpacing=ln.ls;
+    if(ln.rtl){if("direction" in x)x.direction="rtl";x.textAlign="right";const ly=yy+lh*.12;
+      let cx=al==="center"?x0+(maxW+ln.w)/2:x0+maxW;
+      ln.words.forEach(w=>{let h=false;for(let k=0;k<w.t.length;k++)if(m[w.s+k]){h=true;break}x.fillStyle=h?hi:base;x.fillText(w.t,cx,ly);cx-=w.w+ln.sp});
+      if("direction" in x)x.direction="ltr";x.textAlign="left"}
+    else{let cx=al==="center"?x0+(maxW-ln.w)/2:x0;
+      ln.words.forEach(w=>{let i=0;while(i<w.t.length){let j=i;const h=m[w.s+i];while(j<w.t.length&&m[w.s+j]===h)j++;const run=w.t.slice(i,j);x.fillStyle=h?hi:base;x.fillText(run,cx,yy);cx+=x.measureText(run).width;i=j}cx+=ln.sp})}
+    yy+=lh*ln.hm})}
 const procCache={};
 function procImg(img,bg,tone,tol){
   const key=img.src.length+"|"+img.src.slice(-40)+bg+tone+tol;if(procCache[key])return procCache[key];
@@ -408,7 +428,7 @@ function procImg(img,bg,tone,tol){
   return procCache[key]=c}
 async function drawSlide(cv,idx){
   const s=S.slides[idx],t=S.tpls[S.sel];if(!s||!t)return;
-  try{await Promise.all([document.fonts.load("800 40px Montserrat"),document.fonts.load("400 40px Montserrat"),document.fonts.load("700 24px Montserrat")])}catch(e){}
+  try{await Promise.all([document.fonts.load("800 40px Montserrat"),document.fonts.load("400 40px Montserrat"),document.fonts.load("700 24px Montserrat"),document.fonts.load("700 40px Amiri","بسم الله"),document.fonts.load("400 40px Amiri","بسم الله")])}catch(e){}
   const tok=cv._t=(cv._t||0)+1;const tpl=await loadImg(t.src),raw=s.ill?await loadImg(s.ill.src):null;if(cv._t!==tok)return;
   const x=cv.getContext("2d");x.clearRect(0,0,1080,1350);x.drawImage(tpl,0,0,1080,1350);
   const look=$("look").value,L=165,R=918,W=R-L,B=1170,GAP=36,GAP2=44,N=S.slides.length,num=$("num").checked,Tt=num?214:170,areaH=B-Tt;
@@ -417,8 +437,10 @@ async function drawSlide(cv,idx){
   x.textBaseline="top";x.textAlign="left";
   const spc=px=>look==="tech"?Math.round(px*.03)+"px":"0px",LS=v=>{if("letterSpacing" in x)x.letterSpacing=v};
   const layout=(tsz,bsz,width)=>{
-    x.font=`800 ${tsz}px Montserrat, sans-serif`;LS(spc(tsz));const tl=title.trim()?wrapT(x,title,width):[];const th=tl.length*tsz*tlh;
-    x.font=`400 ${bsz}px Montserrat, sans-serif`;LS("0px");const bl=s.body.trim()?wrapT(x,s.body,width):[];const bh=bl.length*bsz*1.45;
+    const tl=title.trim()?wrapT(x,title,width,r=>r?`700 ${Math.round(tsz*1.12)}px ${AR}`:`800 ${tsz}px Montserrat, sans-serif`,spc(tsz)):[];
+    const th=tl.reduce((a,l)=>a+l.hm,0)*tsz*tlh;
+    const bl=s.body.trim()?wrapT(x,s.body,width,r=>r?`400 ${Math.round(bsz*1.12)}px ${AR}`:`400 ${bsz}px Montserrat, sans-serif`,"0px"):[];
+    const bh=bl.reduce((a,l)=>a+l.hm,0)*bsz*1.45;
     const rule=look==="editorial"&&th?36:0;return{tl,bl,th,bh,rule,tsz,bsz,H:rule+th+(th&&bh?GAP:0)+bh}};
   const ct=$("ct").value,cb=$("cb").value,hc=$("ch").value;
   let Ls=layout(ts0,bs0,W-2*pad),img=null,iw=0,ih=0,ar=1,side=false;
@@ -510,8 +532,9 @@ function updClaude(){const p=$("cp");if(p)p.textContent=claudePrompt(false);
   const w=(cleanTr($("tr").value).match(/\S+/g)||[]).length;$("trc").textContent=w?w+" kata (penanda waktu dibersihkan otomatis)":""}
 $("cpb").onclick=()=>{if(S.src==="yt"&&!cleanTr($("tr").value)){toast("Tempel transkrip dulu di kolom Transkrip");return}copyText(claudePrompt(true))};
 S.src="web";
+function placeSrc(){const api=S.src==="gem"||S.src==="web";$(api?"slot-gem":"slot-main").appendChild($("jnw"));if(api)$(S.src==="gem"?"api-gem":"api-web").appendChild($("apibox"))}
 $("srcs").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.src=b.dataset.v;
-  $("srcs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));$("p-web").hidden=S.src!=="web";$("p-gem").hidden=S.src!=="gem";$("p-yt").hidden=S.src!=="yt";$(S.src==="gem"?"slot-gem":"slot-main").appendChild($("jnw"));updClaude()});
+  $("srcs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));$("p-web").hidden=S.src!=="web";$("p-gem").hidden=S.src!=="gem";$("p-yt").hidden=S.src!=="yt";placeSrc();updClaude()});
 $("ytb").onclick=()=>{const l=$("yt").value.trim();
   if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
   window.open($("ys").value,"_blank","noopener");copyText(l,"Link disalin. Tempel di situs transkrip.")};
@@ -522,21 +545,20 @@ try{const k=localStorage.getItem(GK);if(k){$("gk").value=k;$("gks").checked=true
 function saveKey(){try{if($("gks").checked)localStorage.setItem(GK,$("gk").value.trim());else localStorage.removeItem(GK)}catch(e){}}
 $("gk").addEventListener("input",saveKey);$("gks").addEventListener("change",saveKey);
 $("gauto").onclick=async()=>{
-  const l=$("gl").value.trim(),key=$("gk").value.trim(),model=($("gm2").value.trim()||$("gm").value),st=$("gst"),btn=$("gauto"),nl=ytNorm(l);
-  if(!/(youtu\.be\/|youtube\.com\/(watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))[\w-]{11}/.test(l)){toast("Link YouTube tidak valid");return}
-  if(!nl){toast("Link YouTube tidak valid");return}
+  const web=S.src==="web",l=(web?$("lk"):$("gl")).value.trim(),key=$("gk").value.trim(),model=($("gm2").value.trim()||$("gm").value),st=$("gst"),btn=$("gauto"),nl=web?l:ytNorm(l);
+  if(web?!/^https?:\/\/\S+\.\S+$/i.test(l):!nl){toast(web?"Link website tidak valid (harus diawali http:// atau https://)":"Link YouTube tidak valid");return}
   if(!key){toast("Isi API key Gemini dulu");return}
   if(!model){toast("Isi nama model dulu");return}
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),180000);
-  btn.disabled=true;st.textContent="Memproses video... biasanya 20 sampai 90 detik.";
+  btn.disabled=true;st.textContent=web?"Membaca website... biasanya 15 sampai 60 detik.":"Memproses video... biasanya 20 sampai 90 detik.";
   try{
     const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
-      body:JSON.stringify({contents:[{parts:[{text:claudePrompt(true)},{file_data:{file_uri:nl}}]}],generationConfig:{temperature:.4}}),signal:ctl.signal});
+      body:JSON.stringify(web?{contents:[{parts:[{text:claudePrompt(true)}]}],tools:[{url_context:{}}],generationConfig:{temperature:.4}}:{contents:[{parts:[{text:claudePrompt(true)},{file_data:{file_uri:nl}}]}],generationConfig:{temperature:.4}}),signal:ctl.signal});
     const j=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error((j.error&&j.error.message)||("HTTP "+r.status));
     const parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
     const txt=parts.map(p=>p.text||"").join("\n");
-    if(!parseSlides(txt).length)throw new Error("Jawaban Gemini tidak berformat SLIDE. Coba lagi atau pakai cara manual.");
+    if(!parseSlides(txt).length)throw new Error("Jawaban Gemini tidak berformat SLIDE. Coba lagi"+(web?", pastikan halaman bisa dibuka tanpa login,":"")+" atau pakai cara manual.");
     $("imp").value=txt;$("impb").click();st.textContent="Selesai. Slide sudah diimpor."}
   catch(e){st.textContent=e.name==="AbortError"?"Waktu habis. Coba lagi atau pakai video yang lebih pendek."
     :e instanceof TypeError?"Tidak bisa terhubung ke API Gemini. Kalau halaman ini dibuka dari dalam Claude, koneksi ke situs luar diblokir. Pakai file HTML lokal atau GitHub Pages, atau pakai cara manual."
@@ -584,6 +606,7 @@ slidesEl.addEventListener("drop",e=>{const c=e.target.closest(".slide");if(!c)re
   const f=imgFile(e.dataTransfer);if(!f){toast("File harus berupa gambar (PNG, JPG, atau WebP)");return}
   const i=+c.dataset.i;readFile(f,src=>{S.slides[i].ill={name:f.name,src};S.cur=i;renderSlides();update(true);toast("Gambar ditambahkan ke slide "+(i+1))})});
 ["dragover","drop"].forEach(t=>window.addEventListener(t,e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes("Files"))e.preventDefault()}));
+placeSrc();
 init();
 </script>
 </body>
