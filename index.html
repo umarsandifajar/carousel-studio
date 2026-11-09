@@ -4,12 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Carousel Studio</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='15'%20fill='%23050D19'/%3E%3Crect%20x='1.5'%20y='1.5'%20width='61'%20height='61'%20rx='13.5'%20fill='none'%20stroke='%2300A8FF'%20stroke-opacity='.45'%20stroke-width='3'/%3E%3Ctext%20x='32'%20y='43'%20font-family='Arial%2CHelvetica%2Csans-serif'%20font-size='30'%20font-weight='800'%20text-anchor='middle'%20fill='%23A5E8FF'%20letter-spacing='-1'%3ECS%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#050D19">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050D19;--violet:#00A8FF;--neon:#A5E8FF;--text:#F4FAFF;--panel:rgba(255,255,255,.06);--line:rgba(255,255,255,.13);--muted:rgba(244,250,255,.62);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-*,*::before,*::after{box-sizing:inherit}
+*,*::before,*::after{box-sizing:border-box}
 body{margin:0;min-height:100vh;color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;color-scheme:dark;
 background:radial-gradient(900px 600px at 10% -5%,rgba(0,168,255,.30),transparent 60%),radial-gradient(800px 600px at 96% 8%,rgba(165,232,255,.15),transparent 60%),radial-gradient(900px 700px at 50% 112%,rgba(0,168,255,.20),transparent 60%),var(--bg);background-attachment:fixed}
 .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 40px;display:grid;gap:22px;grid-template-columns:minmax(0,1fr) 390px}
@@ -145,6 +147,25 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 .slide.dz .drop{background:rgba(165,232,255,.16);border-color:var(--neon);border-style:solid}
 .tx{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;border-radius:980px;border:1px solid rgba(255,255,255,.35);background:rgba(5,13,25,.9);color:var(--text);display:grid;place-items:center;padding:0;cursor:pointer;z-index:2;font:600 11px/1 inherit;transition:background .2s,transform .2s}
 .tx:hover{background:#FF5C7A;transform:scale(1.12)}.tx.ask{background:#FF5C7A;color:#fff;padding:0 9px}
+.imp,.imp>div,.imp .apibox{min-width:0;max-width:100%}
+.imp select,.imp textarea,.imp pre,.imp .btn,.imp input[type=text],.imp input[type=number]{display:block;width:100%;max-width:100%;min-width:0}
+.keybox{border-radius:18px;padding:14px;margin-top:6px;background:linear-gradient(155deg,rgba(0,168,255,.18),rgba(165,232,255,.05) 60%,rgba(255,255,255,.03));border:1px solid rgba(165,232,255,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 8px 24px rgba(0,0,0,.25);transition:border-color .3s,box-shadow .3s}
+.keybox:hover,.keybox:focus-within{border-color:rgba(165,232,255,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 10px 30px rgba(0,168,255,.2)}
+.kh{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}.kh svg{color:var(--neon);flex:0 0 auto}
+.kst{margin-left:auto;font-size:11px;font-weight:600;padding:2px 10px;border-radius:980px;background:rgba(255,255,255,.08);color:var(--muted);white-space:nowrap}
+.kst.ok{background:rgba(165,232,255,.16);color:var(--neon)}
+.kin{display:flex;align-items:center;gap:6px;margin-top:12px;background:rgba(5,13,25,.6);border:1px solid var(--line);border-radius:14px;padding:0 6px 0 14px;transition:border-color .2s,box-shadow .2s}
+.kin:focus-within{border-color:var(--violet);box-shadow:0 0 0 3px rgba(0,168,255,.28)}
+.imp .kin input{flex:1;display:block;width:auto;min-width:0;background:none;border:0;box-shadow:none;border-radius:0;padding:12px 0;font:13px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;color:var(--text);outline:none}
+.imp .kin input::placeholder{letter-spacing:0;font-family:inherit;color:var(--muted)}
+.kin button{flex:0 0 34px;width:34px;height:34px;border-radius:50%;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;padding:0;cursor:pointer;transition:background .2s,color .2s}
+.kin button:hover{background:rgba(255,255,255,.12);color:var(--text)}
+.tg{display:flex;align-items:center;gap:10px;margin:14px 0 0;font-size:12px;color:var(--text);cursor:pointer;position:relative}
+.tg input{position:absolute;opacity:0;width:1px;height:1px}
+.tg i{flex:0 0 38px;width:38px;height:22px;border-radius:980px;background:rgba(255,255,255,.2);position:relative;transition:background .25s}
+.tg i::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.tg input:checked+i{background:var(--violet)}.tg input:checked+i::after{transform:translateX(16px)}
+.tg input:focus-visible+i{outline:2px solid var(--neon);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -190,8 +211,11 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <div id="p-gem" hidden>
 <label for="gl">Link YouTube</label><input type="text" id="gl" placeholder="https://www.youtube.com/watch?v=...">
 <div id="api-gem"><div class="apibox" id="apibox" style="margin-top:12px;padding-top:4px;border-top:1px solid var(--line)">
-<label for="gk">API key Gemini (untuk mode otomatis)</label><input type="password" id="gk" placeholder="AIza..." autocomplete="off">
-<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="gks"> Ingat key di browser ini</label>
+<div class="keybox">
+<div class="kh"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L20 3M16 7l3 3M14 9l2 2"/></svg><span>API key Gemini</span><span class="kst" id="kst">Belum diisi</span></div>
+<div class="kin"><input type="password" id="gk" placeholder="Tempel key (AIza...)" autocomplete="off" spellcheck="false" aria-label="API key Gemini"><button type="button" id="kview" aria-label="Tampilkan key" title="Tampilkan atau sembunyikan"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+<label class="tg"><input type="checkbox" id="gks"><i></i><span>Ingat key di browser ini</span></label>
+</div>
 <label for="gm">Model</label><select id="gm"><option value="gemini-3-flash-preview">gemini-3-flash-preview</option><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-2.5-pro">gemini-2.5-pro</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option></select>
 <input type="text" id="gm2" placeholder="atau ketik nama model lain (opsional)" style="margin-top:8px">
 <div id="slot-gem"></div>
@@ -544,6 +568,11 @@ const GK="gemkey";
 try{const k=localStorage.getItem(GK);if(k){$("gk").value=k;$("gks").checked=true}}catch(e){}
 function saveKey(){try{if($("gks").checked)localStorage.setItem(GK,$("gk").value.trim());else localStorage.removeItem(GK)}catch(e){}}
 $("gk").addEventListener("input",saveKey);$("gks").addEventListener("change",saveKey);
+const EYE0=$("kview").innerHTML,EYE1='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0112 5c6.4 0 10 7 10 7a17 17 0 01-3.2 4M6.5 6.6A17 17 0 002 12s3.6 7 10 7c1.8 0 3.4-.5 4.8-1.2M9.9 9.9a3 3 0 004.2 4.2"/></svg>';
+function updKey(){const v=$("gk").value.trim(),k=$("kst");k.textContent=v?($("gks").checked?"Tersimpan di browser":"Hanya sesi ini"):"Belum diisi";k.classList.toggle("ok",!!v)}
+$("gk").addEventListener("input",updKey);$("gks").addEventListener("change",updKey);
+$("kview").onclick=()=>{const p=$("gk").type==="password";$("gk").type=p?"text":"password";$("kview").innerHTML=p?EYE1:EYE0;$("kview").setAttribute("aria-label",p?"Sembunyikan key":"Tampilkan key")};
+updKey();
 $("gauto").onclick=async()=>{
   const web=S.src==="web",l=(web?$("lk"):$("gl")).value.trim(),key=$("gk").value.trim(),model=($("gm2").value.trim()||$("gm").value),st=$("gst"),btn=$("gauto"),nl=web?l:ytNorm(l);
   if(web?!/^https?:\/\/\S+\.\S+$/i.test(l):!nl){toast(web?"Link website tidak valid (harus diawali http:// atau https://)":"Link YouTube tidak valid");return}
