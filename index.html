@@ -144,7 +144,7 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 .dot[aria-current=true]{background:var(--neon);transform:scale(1.25);box-shadow:0 0 0 3px rgba(165,232,255,.22),0 0 14px 2px var(--neon)}
 @media(min-width:901px){.stick{max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin;padding:4px;margin:-4px}}
 .slide.dz{border-color:var(--neon);background:rgba(165,232,255,.1);box-shadow:0 0 0 2px var(--neon),0 10px 30px rgba(0,168,255,.2)}
-.slide.dz .drop{background:rgba(165,232,255,.16);border-color:var(--neon);border-style:solid}
+.slide.dz .drop.dzt{background:rgba(165,232,255,.18);border-color:var(--neon);border-style:solid}
 .tx{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;border-radius:980px;border:1px solid rgba(255,255,255,.35);background:rgba(5,13,25,.9);color:var(--text);display:grid;place-items:center;padding:0;cursor:pointer;z-index:2;font:600 11px/1 inherit;transition:background .2s,transform .2s}
 .tx:hover{background:#FF5C7A;transform:scale(1.12)}.tx.ask{background:#FF5C7A;color:#fff;padding:0 9px}
 .imp,.imp>div,.imp .apibox{min-width:0;max-width:100%}
@@ -166,6 +166,7 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 .tg i::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
 .tg input:checked+i{background:var(--violet)}.tg input:checked+i::after{transform:translateX(16px)}
 .tg input:focus-visible+i{outline:2px solid var(--neon);outline-offset:2px}
+.lsec{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.lt{font-size:13px;font-weight:600;color:var(--neon);margin-bottom:6px}.lset[hidden]{display:none}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -240,6 +241,12 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <label for="impm">Cara impor</label><select id="impm"><option value="replace">Ganti semua slide</option><option value="append">Tambah di belakang slide yang ada</option></select>
 <button class="btn main" id="impb" style="margin-top:12px;padding:11px">Impor slide</button>
 <p class="hint">Tipe slide: cover, isi, atau cta. Baris Gambar diabaikan, gambar tetap diunggah di kartu slide.</p></details>
+<details class="imp"><summary>Ilustrasi otomatis (Gemini, vektor)</summary>
+<div class="row"><div><label for="astyle">Gaya ilustrasi</label><select id="astyle"><option value="geo">Ikon geometris</option><option value="orn">Ornamen dan pola abstrak</option><option value="info">Diagram sederhana</option></select></div>
+<div style="align-self:end"><label class="tg" style="margin:0 0 10px"><input type="checkbox" id="acv"><i></i><span>Sertakan cover dan CTA</span></label></div></div>
+<button class="btn main" id="artall" style="margin-top:10px;padding:11px">Buat ilustrasi semua slide</button>
+<p class="hint" id="arts"></p>
+<p class="hint">Memakai API key dan model dari bagian Impor. Hasilnya gambar vektor sederhana tanpa teks dan tanpa figur manusia, berlatar transparan, berwarna sesuai warna Sorot dan Cyan Blue. Hanya jalan di file HTML lokal atau GitHub Pages. Slide yang dicentang Lewati tidak diproses.</p></details>
 <div id="slides"></div>
 <button class="btn" id="add" style="width:100%">+ Tambah slide</button></section>
 </main>
@@ -281,13 +288,13 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 <script>
 const $=id=>document.getElementById(id);
 const S={tpls:[],sel:0,cur:0,slides:[]};
-const newSlide=(t)=>({type:t||"isi",title:"",body:"",hl:"",ill:null,ip:"bottom",is:60,bg:"fade",tone:"orig"});
+const newSlide=(t)=>({type:t||"isi",title:"",body:"",hl:"",ill:null,ip:"bottom",is:60,bg:"fade",tone:"orig",lay:null,la:"full",lm:"cover",lw:100,lx:50,ly:50,ft:0,fb:0,fl:0,fr:0,lo:100,ls:0,hint:"",noart:false,artst:""});
 S.slides=[newSlide("cover"),newSlide("isi")];
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast("Penyimpanan penuh, template tidak tersimpan")}}};
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1800)}
-function defaultTpl(){
+function defaultTpl(withBg){withBg=withBg!==false;
   const c=document.createElement("canvas");c.width=1080;c.height=1350;const x=c.getContext("2d");
-  x.fillStyle="#050D19";x.fillRect(0,0,1080,1350);
+  if(withBg){x.fillStyle="#050D19";x.fillRect(0,0,1080,1350)}
   x.fillStyle="#F4FAFF";x.font="700 22px Montserrat, sans-serif";x.textBaseline="middle";
   x.fillText("SANDIANA.ART",170,92);
   x.textAlign="right";x.fillText("UMAR",912,92);x.fillText("SANDI",912,112);
@@ -302,7 +309,7 @@ function defaultTpl(){
 }
 function init(){
   const saved=store.get("tpls")||[];
-  const go=()=>{S.tpls=[{name:"Sandiana (bawaan)",src:defaultTpl()},...saved];renderTpls();renderSlides();update()};
+  const go=()=>{S.tpls=[{name:"Sandiana (bawaan)",src:defaultTpl(),def:true},...saved];renderTpls();renderSlides();update()};
   const f=document.fonts;(f?f.load("700 22px Montserrat").then(()=>f.load("400 24px Montserrat")):Promise.resolve()).then(go,go);
 }
 const XSVG='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -327,6 +334,7 @@ Object.keys(PRESETS).forEach(k=>{const b=document.createElement("button");b.text
 function renderSlides(){
   const box=$("slides");box.innerHTML="";
   S.slides.forEach((s,i)=>{const d=document.createElement("div");d.className="slide"+(i===S.cur?" on":"");d.dataset.i=i;
+    const rng=(k,l,mn,mx)=>`<label>${l} <b data-r="${k}">${s[k]}%</b></label><input type="range" data-k="${k}" min="${mn}" max="${mx}" style="width:100%;accent-color:var(--neon)">`;
     d.innerHTML=`<div class="sh"><span class="sht"><b>Slide ${i+1}</b><em class="sn">${(s.title||"").replace(/[<&]/g,"").slice(0,30)||"kosong"}</em></span><span><button class="btn" data-a="dup">Duplikat</button><button class="btn" data-a="del" ${S.slides.length<2?"disabled":""}>Hapus</button></span></div>
 <div class="sb"><div>
 <label>Tipe</label><select data-k="type"><option value="cover">Cover</option><option value="isi">Isi</option><option value="cta">Penutup</option></select>
@@ -336,25 +344,42 @@ function renderSlides(){
 <label>Gambar referensi (opsional)</label>
 <div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,"")+" (klik atau seret untuk ganti)":"Klik atau seret gambar dari Explorer ke sini"}</span></div>
 <input type="file" accept="image/*" hidden data-a="file">
+<button class="btn" data-a="art" style="width:100%;margin-top:8px">Buat ilustrasi otomatis (Gemini)</button>
+<label class="tg"><input type="checkbox" data-k="noart"><i></i><span>Lewati saat "Buat semua"</span></label>
+<p class="hint" data-st>${(s.artst||"").replace(/</g,"")}</p>
 <div class="mini"><div><label>Latar gambar</label><select data-k="bg"><option value="fade">Fade tepi</option><option value="cut">Hapus latar</option><option value="card">Kartu bulat</option><option value="orig">Asli</option></select></div><div><label>Warna gambar</label><select data-k="tone"><option value="orig">Asli</option><option value="duo">Duotone palet</option></select></div></div>
 <div class="mini"><div><label>Posisi gambar</label><select data-k="ip"><option value="bottom">Bawah</option><option value="top">Atas</option><option value="left">Kiri (teks di samping)</option><option value="right">Kanan (teks di samping)</option><option value="center">Tengah</option></select></div>
 <div><label>Ukuran gambar <b data-r="is">${s.is}%</b></label><input type="range" data-k="is" min="20" max="100" style="width:100%;accent-color:var(--neon)"></div></div>
+<div class="lsec"><div class="lt">Gambar latar (layer di atas template)</div>
+<div class="drop ldrop" data-a="lpick"><span>${s.lay?'<img src="'+s.lay.src+'" alt="">'+s.lay.name.replace(/</g,"")+" (klik atau seret untuk ganti)":"Klik atau seret gambar latar ke sini"}</span></div>
+<input type="file" accept="image/*" hidden data-a="lfile">
+<div class="lset" ${s.lay?"":"hidden"}>
+<button class="btn" data-a="ldel" style="width:100%;margin-top:8px">Hapus gambar latar</button>
+<div class="mini"><div><label>Area</label><select data-k="la"><option value="full">Layar penuh</option><option value="content">Area konten</option></select></div>
+<div><label>Ukuran</label><select data-k="lm"><option value="cover">Penuhi area</option><option value="contain">Muat utuh</option><option value="custom">Kustom</option></select></div></div>
+${rng("lw","Lebar kustom",20,200)}${rng("lx","Posisi horizontal",0,100)}${rng("ly","Posisi vertikal",0,100)}
+${rng("ft","Fade atas",0,100)}${rng("fb","Fade bawah",0,100)}${rng("fl","Fade kiri",0,100)}${rng("fr","Fade kanan",0,100)}
+${rng("lo","Opasitas",0,100)}${rng("ls","Lapisan peredam di belakang teks",0,100)}
+<p class="hint">Peredam otomatis gelap untuk teks terang, dan terang untuk teks gelap. Pada template unggahan, area Layar penuh menutupi header dan footer template.</p></div></div>
 <details class="pd"><summary>Prompt AI slide ${i+1} (opsional)</summary><pre data-p></pre><button class="btn" data-a="cp">Salin prompt slide ${i+1}</button></details></div></div>`;
-    d.querySelectorAll("[data-k]").forEach(el=>el.value=s[el.dataset.k]);updCount(d,s);
+    d.querySelectorAll("[data-k]").forEach(el=>{if(el.type==="checkbox")el.checked=!!s[el.dataset.k];else el.value=s[el.dataset.k]});updCount(d,s);
     box.appendChild(d)});
 }
-const slidesEl=$("slides");
+const slidesEl=$("slides"),NUMK=["is","lw","lx","ly","ft","fb","fl","fr","lo","ls"];
 slidesEl.addEventListener("input",e=>{const c=e.target.closest(".slide");if(!c||!e.target.dataset.k)return;const i=+c.dataset.i,k=e.target.dataset.k;
-  if(k==="body"){const cl=clip(e.target.value);if(cl!==e.target.value)e.target.value=cl}S.slides[i][k]=k==="is"?+e.target.value:e.target.value;if(k==="body")updCount(c,S.slides[i]);if(k==="title")c.querySelector(".sn").textContent=e.target.value.slice(0,30)||"kosong";if(k==="is")c.querySelector("[data-r=is]").textContent=e.target.value+"%";
+  if(k==="body"){const cl=clip(e.target.value);if(cl!==e.target.value)e.target.value=cl}S.slides[i][k]=e.target.type==="checkbox"?e.target.checked:NUMK.includes(k)?+e.target.value:e.target.value;if(k==="body")updCount(c,S.slides[i]);if(k==="title")c.querySelector(".sn").textContent=e.target.value.slice(0,30)||"kosong";if(NUMK.includes(k)){const r=c.querySelector('[data-r="'+k+'"]');if(r)r.textContent=e.target.value+"%"}
   S.cur=i;markCur();update()});
 slidesEl.addEventListener("focusin",e=>{const c=e.target.closest(".slide");if(c&&+c.dataset.i!==S.cur){S.cur=+c.dataset.i;markCur();update()}});
 slidesEl.addEventListener("click",e=>{const c=e.target.closest(".slide");if(!c)return;const i=+c.dataset.i,a=e.target.closest("[data-a]");if(!a){if(e.target.closest(".sh")&&i!==S.cur)selectSlide(i);return}
   if(a.dataset.a==="pick")c.querySelector("[data-a=file]").click();
   if(a.dataset.a==="cp")copyText(c.querySelector("[data-p]").textContent);
+  if(a.dataset.a==="lpick")c.querySelector("[data-a=lfile]").click();
+  if(a.dataset.a==="ldel"){S.slides[i].lay=null;renderSlides();update(true)}
+  if(a.dataset.a==="art")genArt(i);
   if(a.dataset.a==="del"&&S.slides.length>1){S.slides.splice(i,1);S.cur=Math.min(S.cur,S.slides.length-1);renderSlides();update()}
   if(a.dataset.a==="dup"){S.slides.splice(i+1,0,{...S.slides[i]});S.cur=i+1;renderSlides();update()}});
-slidesEl.addEventListener("change",e=>{if(e.target.dataset.a!=="file")return;const c=e.target.closest(".slide"),i=+c.dataset.i,f=e.target.files[0];if(!f)return;
-  readFile(f,src=>{S.slides[i].ill={name:f.name,src};S.cur=i;renderSlides();update()})});
+slidesEl.addEventListener("change",e=>{const t=e.target.dataset.a;if(t!=="file"&&t!=="lfile")return;const c=e.target.closest(".slide"),i=+c.dataset.i,f=e.target.files[0];if(!f)return;
+  if(t==="lfile")setLayer(i,f);else readFile(f,src=>{S.slides[i].ill={name:f.name,src};S.cur=i;renderSlides();update()})});
 function markCur(){document.querySelectorAll(".slide").forEach((d,i)=>d.classList.toggle("on",i===S.cur))}
 $("add").onclick=()=>{const last=S.slides[S.slides.length-1];S.slides.push(newSlide("isi"));S.cur=S.slides.length-1;renderSlides();update();document.querySelectorAll(".slide")[S.cur].scrollIntoView({behavior:"smooth",block:"center"})};
 ["style","look","tol","al","va","ts","bs","ex","num"].forEach(id=>$(id).addEventListener("input",update));
@@ -453,8 +478,9 @@ function procImg(img,bg,tone,tol){
 async function drawSlide(cv,idx){
   const s=S.slides[idx],t=S.tpls[S.sel];if(!s||!t)return;
   try{await Promise.all([document.fonts.load("800 40px Montserrat"),document.fonts.load("400 40px Montserrat"),document.fonts.load("700 24px Montserrat"),document.fonts.load("700 40px Amiri","بسم الله"),document.fonts.load("400 40px Amiri","بسم الله")])}catch(e){}
-  const tok=cv._t=(cv._t||0)+1;const tpl=await loadImg(t.src),raw=s.ill?await loadImg(s.ill.src):null;if(cv._t!==tok)return;
+  const tok=cv._t=(cv._t||0)+1;const tpl=await loadImg(t.src),raw=s.ill?await loadImg(s.ill.src):null,rawL=s.lay?await loadImg(s.lay.src):null,ovl=(s.lay&&s.la==="full"&&t.def)?await loadImg(S.ovl=S.ovl||defaultTpl(false)):null;if(cv._t!==tok)return;
   const x=cv.getContext("2d");x.clearRect(0,0,1080,1350);x.drawImage(tpl,0,0,1080,1350);
+  if(rawL){drawLayer(x,rawL,s,$("ct").value);if(ovl)x.drawImage(ovl,0,0,1080,1350)}
   const look=$("look").value,L=165,R=918,W=R-L,B=1170,GAP=36,GAP2=44,N=S.slides.length,num=$("num").checked,Tt=num?214:170,areaH=B-Tt;
   const pad=look==="soft"?36:0,ts0=Math.round(+$("ts").value*mult(s.type)),bs0=+$("bs").value,al=$("al").value,va=$("va").value,ws=words(s);
   const title=look==="editorial"?s.title.toUpperCase():s.title,tlh=look==="editorial"?1.05:1.12;
@@ -507,7 +533,7 @@ async function saveFile(name,blob){
   if(DL){try{await DL.save({filename:name,data:blob});toast("Tersimpan: "+name)}catch(e){if(!e||e.code!=="declined")toast("Gagal menyimpan "+name)}return}
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();toast("Mengunduh "+name)}
 const toBlob=c=>new Promise(r=>c.toBlob(r,"image/png"));
-const dataBytes=src=>{const b=atob(src.split(",")[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u};
+const dataBytes=src=>{const c=src.indexOf(","),h=src.slice(0,c),d=src.slice(c+1);if(/;base64/.test(h)){const b=atob(d),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}return new TextEncoder().encode(decodeURIComponent(d))};
 async function renderBlob(i){const c=document.createElement("canvas");c.width=1080;c.height=1350;await drawSlide(c,i);return toBlob(c)}
 $("one").onclick=async()=>{toast("Merender...");saveFile("slide-"+String(S.cur+1).padStart(2,"0")+".png",await renderBlob(S.cur))};
 $("zip").onclick=async()=>{toast("Merender "+S.slides.length+" slide...");const fs=[];
@@ -515,7 +541,7 @@ $("zip").onclick=async()=>{toast("Merender "+S.slides.length+" slide...");const 
   saveFile("carousel.zip",makeZip(fs))};
 async function copyText(t,msg){try{await navigator.clipboard.writeText(t);toast(msg||"Prompt tersalin")}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(_){}ta.remove();toast(ok?"Prompt tersalin":"Gagal menyalin, salin manual")}}
 $("dlT").onclick=()=>saveFile("image1-template.png",new Blob([dataBytes(S.tpls[S.sel].src)],{type:"image/png"}));
-$("dlI").onclick=()=>{const fs=[];let n=1;S.slides.forEach((x,i)=>{if(!x.ill)return;n++;fs.push({name:"image"+n+"-slide"+(i+1)+".png",data:dataBytes(x.ill.src)})});
+$("dlI").onclick=()=>{const fs=[];let n=1;S.slides.forEach((x,i)=>{if(!x.ill)return;n++;fs.push({name:"image"+n+"-slide"+(i+1)+(x.ill.src.indexOf("data:image/svg")===0?".svg":".png"),data:dataBytes(x.ill.src)})});
   fs.length?saveFile("referensi.zip",makeZip(fs)):toast("Belum ada gambar referensi")};
 $("flow").onclick=()=>window.open("https://labs.google/fx/tools/flow","_blank","noopener");
 document.addEventListener("pointermove",e=>{const c=e.target.closest&&e.target.closest(".card,.slide");if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty("--mx",(e.clientX-r.left)+"px");c.style.setProperty("--my",(e.clientY-r.top)+"px")});
@@ -527,7 +553,7 @@ function parseSlides(txt){const out=[];let cur=null,last=null;
     if(h){cur=Object.assign(newSlide(T[(h[1]||"").toLowerCase()]||"isi"),{});out.push(cur);last=null;return}
     if(!cur)return;
     const k=line.match(/^\s*\**\s*(judul|title|isi|body|sorot|highlight|gambar|image)\s*\**\s*:\s*(.*)$/i);
-    if(k){last=K[k[1].toLowerCase()];if(last!=="img")cur[last]=k[2].replace(/^\*+|\*+$/g,"").trim();return}
+    if(k){last=K[k[1].toLowerCase()];cur[last==="img"?"hint":last]=k[2].replace(/^\*+|\*+$/g,"").trim();return}
     if(last&&(last==="title"||last==="body")&&line.trim())cur[last]+="\n"+line.trim()});
   return out}
 $("impb").onclick=()=>{const list=parseSlides($("imp").value);
@@ -629,12 +655,69 @@ let tx=null;$("zcv").addEventListener("touchstart",e=>{tx=e.touches[0].clientX},
 $("zcv").addEventListener("touchend",e=>{if(tx===null)return;const d=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(d)>50)zoomGo(d<0?1:-1)});
 $("pvp").onclick=()=>selectSlide(S.cur-1);$("pvn").onclick=()=>selectSlide(S.cur+1);$("pvc").onclick=()=>openZoom(S.cur);
 function imgFile(dt){return [...((dt&&dt.files)||[])].find(f=>f.type.startsWith("image/"))}
-slidesEl.addEventListener("dragover",e=>{const c=e.target.closest(".slide");if(!c)return;e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";c.classList.add("dz")});
-slidesEl.addEventListener("dragleave",e=>{const c=e.target.closest(".slide");if(c&&!c.contains(e.relatedTarget))c.classList.remove("dz")});
-slidesEl.addEventListener("drop",e=>{const c=e.target.closest(".slide");if(!c)return;e.preventDefault();c.classList.remove("dz");
+slidesEl.addEventListener("dragover",e=>{const c=e.target.closest(".slide");if(!c)return;e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect="copy";c.classList.add("dz");c.querySelectorAll(".drop").forEach(d=>d.classList.remove("dzt"));const dd=e.target.closest(".drop");if(dd)dd.classList.add("dzt")});
+slidesEl.addEventListener("dragleave",e=>{const c=e.target.closest(".slide");if(c&&!c.contains(e.relatedTarget)){c.classList.remove("dz");c.querySelectorAll(".dzt").forEach(d=>d.classList.remove("dzt"))}});
+slidesEl.addEventListener("drop",e=>{const c=e.target.closest(".slide");if(!c)return;e.preventDefault();c.classList.remove("dz");c.querySelectorAll(".dzt").forEach(d=>d.classList.remove("dzt"));
   const f=imgFile(e.dataTransfer);if(!f){toast("File harus berupa gambar (PNG, JPG, atau WebP)");return}
-  const i=+c.dataset.i;readFile(f,src=>{S.slides[i].ill={name:f.name,src};S.cur=i;renderSlides();update(true);toast("Gambar ditambahkan ke slide "+(i+1))})});
+  const i=+c.dataset.i;if(e.target.closest(".ldrop")){setLayer(i,f);return}
+  readFile(f,src=>{S.slides[i].ill={name:f.name,src};S.cur=i;renderSlides();update(true);toast("Gambar ditambahkan ke slide "+(i+1))})});
 ["dragover","drop"].forEach(t=>window.addEventListener(t,e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes("Files"))e.preventDefault()}));
+function shrinkImg(file,cb){const r=new FileReader();r.onload=()=>{if(/svg/.test(file.type)){cb(r.result);return}
+  const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));c.getContext("2d").drawImage(im,0,0,c.width,c.height);cb(c.toDataURL(/png|webp|gif/.test(file.type)?"image/png":"image/jpeg",.9))};im.onerror=()=>cb(r.result);im.src=r.result};r.readAsDataURL(file)}
+function setLayer(i,f){shrinkImg(f,src=>{const sl=S.slides[i];sl.lay={name:f.name,src};if(!sl.ls)sl.ls=30;sl.la=(S.tpls[S.sel]&&S.tpls[S.sel].def)?"full":"content";S.cur=i;renderSlides();update(true);toast("Gambar latar ditambahkan ke slide "+(i+1))})}
+function lum(h){const n=parseInt(h.slice(1),16);return(.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255))/255}
+function drawLayer(x,img,s,ctc){
+  const full=s.la==="full",ax=full?0:165,ay=full?0:170,aw=full?1080:753,ah=full?1350:1000,iw=img.width,ih=img.height;let dw,dh;
+  if(s.lm==="contain"){const k=Math.min(aw/iw,ah/ih);dw=iw*k;dh=ih*k}
+  else if(s.lm==="custom"){dw=aw*s.lw/100;dh=dw*ih/iw}
+  else{const k=Math.max(aw/iw,ah/ih);dw=iw*k;dh=ih*k}
+  const dx=ax+(aw-dw)*s.lx/100,dy=ay+(ah-dh)*s.ly/100;
+  const vx=Math.max(ax,dx),vy=Math.max(ay,dy),vw=Math.round(Math.min(ax+aw,dx+dw)-vx),vh=Math.round(Math.min(ay+ah,dy+dh)-vy);
+  if(vw<2||vh<2)return;
+  const c=document.createElement("canvas");c.width=vw;c.height=vh;const g=c.getContext("2d");
+  g.drawImage(img,dx-vx,dy-vy,dw,dh);
+  if(s.ls>0){g.globalCompositeOperation="source-atop";g.fillStyle=lum(ctc)<.5?"rgba(255,255,255,"+s.ls/100*.9+")":"rgba(5,13,25,"+s.ls/100*.9+")";g.fillRect(0,0,vw,vh)}
+  g.globalCompositeOperation="destination-in";
+  const edge=(x0,y0,x1,y1,f)=>{if(!f)return;const gr=g.createLinearGradient(x0,y0,x1,y1);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(Math.min(1,f/100),"#000");gr.addColorStop(1,"#000");g.fillStyle=gr;g.fillRect(0,0,vw,vh)};
+  edge(0,0,0,vh,s.ft);edge(0,vh,0,0,s.fb);edge(0,0,vw,0,s.fl);edge(vw,0,0,0,s.fr);
+  x.save();x.globalAlpha=s.lo/100;x.drawImage(c,vx,vy);x.restore()}
+const ART={geo:"Flat geometric icon: one main object built from basic shapes (circles, rectangles, lines) that symbolizes the key message.",orn:"Abstract ornament and geometric pattern (light arabesque / islamic geometric feel), no figures at all.",info:"Simple diagram or infographic (arrows, blocks, flow, bar chart) that illustrates the key message, without any text."};
+function artPrompt(s){const ch=$("ch").value,ct=$("ct").value;
+  return ["Create ONE simple flat vector illustration as a single SVG for a social media carousel slide.",'Slide topic: "'+s.title.trim()+'".','Key message: "'+s.body.trim().slice(0,300)+'".',s.hint?"Visual idea: "+s.hint+".":"","Style: "+ART[$("astyle").value],"","Rules:","- Output ONLY the raw SVG code, starting with <svg and ending with </svg>. No markdown, no explanation.",'- Use viewBox="0 0 400 400" and a transparent background (no full-size background rectangle).',"- Use ONLY these colors: "+ch+" (main accent), #00A8FF (secondary), "+ct+" (light neutral details). Use opacity for depth.","- No text, letters, or numbers. No image elements, script elements, foreignObject, filters, or external references.","- Keep it simple: at most 30 shapes, bold flat shapes, optional stroke-width 6 to 10 with round caps, centered composition with a 20px margin.","- Do not draw human figures, faces, or animals."].join("\n")}
+function cleanSvg(raw){
+  let t=String(raw).replace(/```[a-z]*/gi,"").trim();const a=t.indexOf("<svg"),b=t.lastIndexOf("</svg>");if(a<0||b<0)return null;t=t.slice(a,b+6);
+  const doc=new DOMParser().parseFromString(t,"image/svg+xml");if(doc.querySelector("parsererror"))return null;
+  const root=doc.documentElement;if(!root||root.nodeName.toLowerCase()!=="svg")return null;
+  doc.querySelectorAll("script,foreignObject,image,use,a,iframe,object,embed,animate,set,animateTransform,animateMotion,style").forEach(n=>n.remove());
+  doc.querySelectorAll("*").forEach(n=>{[...n.attributes].forEach(at=>{const nm=at.name.toLowerCase(),v=at.value;if(nm.startsWith("on")||/javascript:/i.test(v)||/url\(\s*['"]?(?!#)/i.test(v)||(nm.indexOf("href")>=0&&v.charAt(0)!=="#"))n.removeAttribute(at.name)})});
+  if(!root.querySelector("path,circle,rect,ellipse,polygon,line,polyline"))return null;
+  root.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  let vb=(root.getAttribute("viewBox")||"").trim().split(/[\s,]+/).map(Number);if(vb.length!==4||vb.some(isNaN)||vb[2]<=0||vb[3]<=0){vb=[0,0,400,400];root.setAttribute("viewBox","0 0 400 400")}
+  root.setAttribute("width","800");root.setAttribute("height",String(Math.round(800*vb[3]/vb[2])));
+  return new XMLSerializer().serializeToString(root)}
+function setArtSt(i,m){S.slides[i].artst=m;const c=document.querySelectorAll(".slide")[i];if(c){const p=c.querySelector("[data-st]");if(p)p.textContent=m}}
+async function genArt(i,quiet){
+  const s=S.slides[i],key=$("gk").value.trim(),model=$("gm2").value.trim()||$("gm").value;
+  if(!key){toast("Isi API key Gemini dulu di bagian Impor");return false}
+  if(!(s.title.trim()||s.body.trim())){toast("Isi judul atau isi slide dulu");return false}
+  setArtSt(i,"Membuat ilustrasi...");
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),120000);
+  try{
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({contents:[{parts:[{text:artPrompt(s)}]}],generationConfig:{temperature:.7}}),signal:ctl.signal});
+    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error((j.error&&j.error.message)||("HTTP "+r.status));
+    const parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
+    const svg=cleanSvg(parts.map(p=>p.text||"").join("\n"));if(!svg)throw new Error("SVG dari Gemini tidak valid. Coba buat ulang.");
+    s.ill={name:"ilustrasi-otomatis-slide"+(i+1)+".svg",src:"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)};s.bg="orig";s.tone="orig";s.artst="Ilustrasi dibuat otomatis. Klik tombolnya lagi untuk membuat ulang.";
+    S.cur=i;renderSlides();update(true);return true}
+  catch(e){const m=e.name==="AbortError"?"Waktu habis. Coba lagi.":e instanceof TypeError?"Tidak bisa terhubung ke API Gemini (hanya jalan di file lokal atau GitHub Pages).":"Gagal: "+e.message;setArtSt(i,m);if(!quiet)toast(m);return false}
+  finally{clearTimeout(to)}}
+$("artall").onclick=async()=>{
+  if(!$("gk").value.trim()){toast("Isi API key Gemini dulu di bagian Impor");return}
+  const idx=S.slides.map((_,i)=>i).filter(i=>{const s=S.slides[i];return !s.noart&&(s.title.trim()||s.body.trim())&&($("acv").checked||s.type==="isi")});
+  if(!idx.length){toast("Tidak ada slide yang cocok. Isi teks slide atau aktifkan Sertakan cover dan CTA.");return}
+  const btn=$("artall");btn.disabled=true;let ok=0,bad=0;
+  for(let n=0;n<idx.length;n++){$("arts").textContent="Membuat ilustrasi "+(n+1)+" dari "+idx.length+"...";(await genArt(idx[n],true))?ok++:bad++}
+  $("arts").textContent="Selesai: "+ok+" berhasil"+(bad?", "+bad+" gagal (lihat pesan di kartu slide)":"")+".";btn.disabled=false};
 placeSrc();
 init();
 </script>

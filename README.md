@@ -10,15 +10,18 @@ Alat gratis untuk membuat carousel Instagram 4:5 (1080x1350 px) dari template te
 - Gambar menyatu dengan background: fade tepi, hapus latar, kartu bulat, duotone palet
 - Unduh per slide (PNG) atau semua slide (ZIP)
 - Prompt AI per slide untuk Google Flow (opsional)
+- Ilustrasi vektor otomatis per slide lewat Gemini (SVG, tanpa teks dan tanpa figur manusia)
+- Gambar latar (layer di atas template) per slide: ukuran, posisi, fade empat sisi, opasitas, dan lapisan peredam teks
+- Impor rangkuman dari website atau YouTube (manual lewat Claude/Gemini, atau otomatis lewat Gemini API dengan key milikmu sendiri; website dibaca lewat URL context Gemini)
 
 ## Palet warna
 
 | Warna | Hex |
 |---|---|
-| Background | `#10091F` |
-| Violet | `#713BFF` |
-| Neon Purple | `#D946EF` |
-| Text | `#E8E7FF` |
+| Background | `#050D19` |
+| Cyan Blue | `#00A8FF` |
+| Ice Blue | `#A5E8FF` |
+| Text | `#F4FAFF` |
 
 ## Menjalankan
 
@@ -36,3 +39,8 @@ Font Montserrat dimuat dari Google Fonts, jadi butuh koneksi internet.
 ---
 
 by [Fajar Umarsandi](https://www.instagram.com/sandiana.art/)
+
+
+## Catatan keamanan
+
+API key Gemini hanya diketik di browser dan, kalau kamu centang "Ingat key", disimpan di localStorage browsermu. Jangan menulis key ke dalam file HTML atau mengunggahnya ke GitHub.
