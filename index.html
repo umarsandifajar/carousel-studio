@@ -167,6 +167,9 @@ footer a{color:var(--text);text-decoration:none;border-bottom:1px solid var(--li
 .tg input:checked+i{background:var(--violet)}.tg input:checked+i::after{transform:translateX(16px)}
 .tg input:focus-visible+i{outline:2px solid var(--neon);outline-offset:2px}
 .lsec{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.lt{font-size:13px;font-weight:600;color:var(--neon);margin-bottom:6px}.lset[hidden]{display:none}
+.drop{position:relative}
+.ix{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(5,13,25,.88);color:var(--text);display:grid;place-items:center;padding:0;cursor:pointer;z-index:2;transition:background .2s,transform .2s}
+.ix:hover{background:#FF5C7A;transform:scale(1.12)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -342,7 +345,7 @@ function renderSlides(){
 <label>Isi <span class="cn"></span></label><textarea data-k="body" dir="auto" style="min-height:56px" placeholder="Tulis isi konten..."></textarea>
 <label>Kata sorot (koma)</label><input type="text" data-k="hl">
 <label>Gambar referensi (opsional)</label>
-<div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,"")+" (klik atau seret untuk ganti)":"Klik atau seret gambar dari Explorer ke sini"}</span></div>
+<div class="drop" data-a="pick"><span>${s.ill?'<img src="'+s.ill.src+'" alt="">'+s.ill.name.replace(/</g,"")+" (klik atau seret untuk ganti)":"Klik atau seret gambar dari Explorer ke sini"}</span>${s.ill?'<button type="button" class="ix" data-a="idel" aria-label="Hapus gambar referensi" title="Hapus gambar referensi">'+XSVG+'</button>':""}</div>
 <input type="file" accept="image/*" hidden data-a="file">
 <button class="btn" data-a="art" style="width:100%;margin-top:8px">Buat ilustrasi otomatis (Gemini)</button>
 <label class="tg"><input type="checkbox" data-k="noart"><i></i><span>Lewati saat "Buat semua"</span></label>
@@ -351,10 +354,9 @@ function renderSlides(){
 <div class="mini"><div><label>Posisi gambar</label><select data-k="ip"><option value="bottom">Bawah</option><option value="top">Atas</option><option value="left">Kiri (teks di samping)</option><option value="right">Kanan (teks di samping)</option><option value="center">Tengah</option></select></div>
 <div><label>Ukuran gambar <b data-r="is">${s.is}%</b></label><input type="range" data-k="is" min="20" max="100" style="width:100%;accent-color:var(--neon)"></div></div>
 <div class="lsec"><div class="lt">Gambar latar (layer di atas template)</div>
-<div class="drop ldrop" data-a="lpick"><span>${s.lay?'<img src="'+s.lay.src+'" alt="">'+s.lay.name.replace(/</g,"")+" (klik atau seret untuk ganti)":"Klik atau seret gambar latar ke sini"}</span></div>
+<div class="drop ldrop" data-a="lpick"><span>${s.lay?'<img src="'+s.lay.src+'" alt="">'+s.lay.name.replace(/</g,"")+" (klik atau seret untuk ganti)":"Klik atau seret gambar latar ke sini"}</span>${s.lay?'<button type="button" class="ix" data-a="ldel" aria-label="Hapus gambar latar" title="Hapus gambar latar">'+XSVG+'</button>':""}</div>
 <input type="file" accept="image/*" hidden data-a="lfile">
 <div class="lset" ${s.lay?"":"hidden"}>
-<button class="btn" data-a="ldel" style="width:100%;margin-top:8px">Hapus gambar latar</button>
 <div class="mini"><div><label>Area</label><select data-k="la"><option value="full">Layar penuh</option><option value="content">Area konten</option></select></div>
 <div><label>Ukuran</label><select data-k="lm"><option value="cover">Penuhi area</option><option value="contain">Muat utuh</option><option value="custom">Kustom</option></select></div></div>
 ${rng("lw","Lebar kustom",20,200)}${rng("lx","Posisi horizontal",0,100)}${rng("ly","Posisi vertikal",0,100)}
@@ -374,7 +376,8 @@ slidesEl.addEventListener("click",e=>{const c=e.target.closest(".slide");if(!c)r
   if(a.dataset.a==="pick")c.querySelector("[data-a=file]").click();
   if(a.dataset.a==="cp")copyText(c.querySelector("[data-p]").textContent);
   if(a.dataset.a==="lpick")c.querySelector("[data-a=lfile]").click();
-  if(a.dataset.a==="ldel"){S.slides[i].lay=null;renderSlides();update(true)}
+  if(a.dataset.a==="ldel"){S.slides[i].lay=null;renderSlides();update(true);toast("Gambar latar dihapus")}
+  if(a.dataset.a==="idel"){S.slides[i].ill=null;S.slides[i].artst="";renderSlides();update(true);toast("Gambar referensi dihapus")}
   if(a.dataset.a==="art")genArt(i);
   if(a.dataset.a==="del"&&S.slides.length>1){S.slides.splice(i,1);S.cur=Math.min(S.cur,S.slides.length-1);renderSlides();update()}
   if(a.dataset.a==="dup"){S.slides.splice(i+1,0,{...S.slides[i]});S.cur=i+1;renderSlides();update()}});
