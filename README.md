@@ -47,4 +47,4 @@ API key Gemini hanya diketik di browser dan, kalau kamu centang "Ingat key", dis
 
 ## Counter pemakaian
 
-Footer menampilkan jumlah orang yang sudah membuka Studio, dihitung sekali per browser lewat CounterAPI (counterapi.dev). Nama counter bisa diubah di konstanta `CNT` di dalam `index.html`. Tambahkan `?nocount` di akhir alamat untuk membuka tanpa menambah hitungan.
+Footer menampilkan jumlah orang yang sudah membuka Studio, dihitung sekali per browser. Layanan utama: Abacus (abacus.jasoncameron.dev), cadangan: CounterAPI (counterapi.dev). Nama counter bisa diubah di konstanta `CNT` di dalam `index.html`. Tambahkan `?nocount` di akhir alamat untuk membuka tanpa menambah hitungan. Kalau counter gagal, klik kapsulnya untuk mencoba lagi dan melihat penyebabnya.

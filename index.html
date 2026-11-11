@@ -729,19 +729,32 @@ $("artall").onclick=async()=>{
   for(let n=0;n<idx.length;n++){$("arts").textContent="Membuat ilustrasi "+(n+1)+" dari "+idx.length+"...";(await genArt(idx[n],true))?ok++:bad++}
   $("arts").textContent="Selesai: "+ok+" berhasil"+(bad?", "+bad+" gagal (lihat pesan di kartu slide)":"")+".";btn.disabled=false};
 placeSrc();
-const CNT={ns:"carousel-studio-sandiana",name:"pengguna",k:"csCounted"};
-(async function(){
-  const el=$("vc"),num=$("vn"),base="https://api.counterapi.dev/v1/"+CNT.ns+"/"+CNT.name+"/";
-  let counted=true;try{counted=!!localStorage.getItem(CNT.k)}catch(e){counted=true}
+const CNT={ns:"carousel-studio-sandiana",key:"pengguna",flag:"csCounted"};
+const PROV=[
+  {n:"Abacus",hit:()=>"https://abacus.jasoncameron.dev/hit/"+CNT.ns+"/"+CNT.key,get:()=>"https://abacus.jasoncameron.dev/get/"+CNT.ns+"/"+CNT.key,val:j=>j.value},
+  {n:"CounterAPI",hit:()=>"https://api.counterapi.dev/v1/"+CNT.ns+"/"+CNT.key+"/up",get:()=>"https://api.counterapi.dev/v1/"+CNT.ns+"/"+CNT.key+"/",val:j=>j.count!==undefined?j.count:j.value!==undefined?j.value:(j.data&&j.data.up_count)}
+];
+function hostNote(){const h=location.hostname;if(location.protocol==="file:")return"Dibuka dari file lokal. Coba lewat GitHub Pages.";if(/claude|anthropic/i.test(h))return"Versi di dalam Claude memblokir koneksi keluar. Counter hanya jalan di GitHub Pages.";return""}
+function longToast(m){const t=$("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),7000)}
+async function loadCount(){
+  const el=$("vc"),num=$("vn"),vt=el.querySelector(".vt"),errs=[];
+  let counted=true;try{counted=!!localStorage.getItem(CNT.flag)}catch(e){counted=true}
   if(/[?&]nocount\b/.test(location.search))counted=true;
-  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),7000);
-  try{
-    const r=await fetch(base+(counted?"":"up"),{signal:ctl.signal});if(!r.ok)throw new Error("http");
-    const j=await r.json(),n=Number(j.count!==undefined?j.count:j.value!==undefined?j.value:(j.data&&j.data.up_count));if(!isFinite(n))throw new Error("val");
-    if(!counted){try{localStorage.setItem(CNT.k,"1")}catch(e){}}
-    num.textContent=n.toLocaleString("id-ID")}
-  catch(e){el.classList.add("off");el.querySelector(".vt").textContent="counter tidak tersedia";el.title="Counter tidak bisa dimuat. Kemungkinan koneksi diblokir atau layanan sedang tidak aktif."}
-  finally{clearTimeout(to)}})();
+  for(const p of PROV){
+    const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),6000);
+    try{
+      const r=await fetch(counted?p.get():p.hit(),{signal:ctl.signal});if(!r.ok)throw new Error("HTTP "+r.status);
+      const n=Number(p.val(await r.json()));if(!isFinite(n))throw new Error("jawaban tidak dikenali");
+      if(!counted){try{localStorage.setItem(CNT.flag,"1")}catch(e){}}
+      el.classList.remove("off");el.removeAttribute("role");el.removeAttribute("tabindex");el.title="Jumlah orang yang sudah membuka Carousel Studio";
+      vt.innerHTML='sudah dipakai <b id="vn"></b> kali';$("vn").textContent=n.toLocaleString("id-ID");return}
+    catch(e){errs.push(p.n+": "+(e.name==="AbortError"?"waktu habis":(e.message||"gagal")))}
+    finally{clearTimeout(to)}}
+  const why=errs.join(" | ")+(hostNote()?" | "+hostNote():"");
+  el.classList.add("off");el.setAttribute("role","button");el.tabIndex=0;vt.textContent="counter tidak tersedia (klik untuk coba lagi)";el.title=why;el._why=why}
+$("vc").addEventListener("click",async()=>{const el=$("vc");if(!el.classList.contains("off"))return;const w=el._why;el.querySelector(".vt").textContent="mencoba lagi...";await loadCount();if(el.classList.contains("off"))longToast("Counter gagal. "+el._why)});
+$("vc").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&$("vc").classList.contains("off")){e.preventDefault();$("vc").click()}});
+loadCount();
 init();
 </script>
 </body>
