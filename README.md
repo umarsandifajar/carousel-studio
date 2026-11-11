@@ -44,3 +44,7 @@ by [Fajar Umarsandi](https://www.instagram.com/sandiana.art/)
 ## Catatan keamanan
 
 API key Gemini hanya diketik di browser dan, kalau kamu centang "Ingat key", disimpan di localStorage browsermu. Jangan menulis key ke dalam file HTML atau mengunggahnya ke GitHub.
+
+## Counter pemakaian
+
+Footer menampilkan jumlah orang yang sudah membuka Studio, dihitung sekali per browser lewat CounterAPI (counterapi.dev). Nama counter bisa diubah di konstanta `CNT` di dalam `index.html`. Tambahkan `?nocount` di akhir alamat untuk membuka tanpa menambah hitungan.
